@@ -1,0 +1,31 @@
+{
+  "name": "@oversightstudio/blur-data-urls",
+  "type": "module",
+  "version": "1.0.0",
+  "private": false,
+  "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
+  "repository": "https://github.com/oversightstudio/payload-plugins",
+  "license": "MIT",
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "publish": "pnpm publish --access public"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "devDependencies": {
+    "payload": "^3.15.0",
+    "sharp": "0.32.6",
+    "tsup": "^8.3.6",
+    "typescript": "5.7.2"
+  },
+  "peerDependencies": {
+    "payload": "^3.15.0",
+    "sharp": "^0.32.6"
+  }
+}
