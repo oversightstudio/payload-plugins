@@ -1,7 +1,7 @@
 {
   "name": "@oversightstudio/blur-data-urls",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
   "repository": "https://github.com/oversightstudio/payload-plugins",
