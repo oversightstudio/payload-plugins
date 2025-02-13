@@ -12,8 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "publish": "pnpm publish --access public"
+    "build": "tsup src/index.ts --format cjs,esm --dts"
   },
   "exports": {
     ".": {
