@@ -60,7 +60,7 @@ blurDataURL={image.blurDataUrl ?? undefined}
 If you already have images in your media collection, you might want to generate blurDataUrls for them.
 
 To do so:
-1. Place [this script](scripts/generateBlurDataUrls.ts) on your `./src/scripts/ directory`.
+1. Place [this script](/scripts/blurDataUrlsMigrationScript.ts) on your `./src/scripts/ directory`.
 2. Make sure you have `tsx` installed either globally or on your project. You can uninstall it after running the script.
 3. Modify the plugin configuration **on the script**. You'll be able to set the blur options + which collections to migrate. 
 4. Run the script: ``tsx ./src/scripts/blurDataUrlsMigrationScript.ts``
