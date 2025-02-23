@@ -11,7 +11,7 @@ export default defineConfig({
     'esbuild-plugin-preserve-directives',
   ],
   entry: ['src/index.ts', 'src/fields/index.ts'],
-  format: ['cjs', 'esm'],
+  format: ['esm'],
   dts: true,
   outDir: 'dist',
   splitting: false,
