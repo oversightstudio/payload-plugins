@@ -1,5 +1,11 @@
 # @oversightstudio/blur-data-urls
 
+## 1.0.4
+
+### Patch Changes
+
+- 22ad09c: Remove csm support
+
 ## 1.0.3
 
 ### Patch Changes
