@@ -1,5 +1,11 @@
 # @oversightstudio/mux-video
 
+## 1.0.3
+
+### Patch Changes
+
+- 22ad09c: Remove csm support
+
 ## 1.0.2
 
 ### Patch Changes

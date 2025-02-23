@@ -1,7 +1,7 @@
 {
   "name": "@oversightstudio/blur-data-urls",
   "type": "module",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Automatically assign URLs for blur data to media collections in Payload.",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
