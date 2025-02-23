@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { blurDataUrlsPlugin } from '@oversightstudio/blur-data-urls'
+import { muxVideoPlugin } from '@oversightstudio/mux-video'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -40,8 +41,24 @@ export default buildConfig({
       blurOptions: {
         blur: 18,
         width: 32,
-        height: "auto",
-      }
+        height: 'auto',
+      },
+    }),
+    muxVideoPlugin({
+      enabled: true,
+      initSettings: {
+        tokenId: process.env.MUX_TOKEN_ID || '',
+        tokenSecret: process.env.MUX_TOKEN_SECRET || '',
+        webhookSecret: process.env.MUX_WEBHOOK_SIGNING_SECRET || '',
+        jwtSigningKey: process.env.MUX_JWT_KEY_ID || '',
+        jwtPrivateKey: process.env.MUX_JWT_KEY || '',
+      },
+      uploadSettings: {
+        cors_origin: 'http://localhost:3000',
+        new_asset_settings: {
+          playback_policy: ['signed'],
+        },
+      },
     }),
   ],
 })

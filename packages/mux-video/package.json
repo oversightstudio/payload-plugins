@@ -1,0 +1,73 @@
+{
+  "name": "@oversightstudio/mux-video",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Brings Mux Video to PayloadCMS.",
+  "private": false,
+  "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
+  "repository": "https://github.com/oversightstudio/payload-plugins/tree/main/packages/mux-video",
+  "license": "MIT",
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "author": "oversightstudio",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "payload",
+    "cms",
+    "plugin",
+    "mux",
+    "video",
+    "upload"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./elements": {
+      "import": "./src/fields/index.ts",
+      "default": "./src/fields/index.ts"
+    }
+  },
+  "devDependencies": {
+    "@mux/mux-player-react": "^3.2.4",
+    "@payloadcms/ui": "^3.15.0",
+    "@types/react": "19.0.1",
+    "payload": "^3.15.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "tsup": "^8.3.6",
+    "typescript": "5.7.2"
+  },
+  "peerDependencies": {
+    "@mux/mux-player-react": "^3.2.4",
+    "@payloadcms/ui": "^3.15.0",
+    "payload": "^3.15.1"
+  },
+  "dependencies": {
+    "@mux/mux-node": "^9.0.1",
+    "@mux/mux-uploader-react": "^1.1.1"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      },
+      "./elements": {
+        "import": "./dist/fields/index.js",
+        "require": "./dist/fields/index.js",
+        "types": "./dist/fields/index.d.ts"
+      }
+    },
+    "main": "./dist/index.js",
+    "registry": "https://registry.npmjs.org/",
+    "types": "./dist/index.d.ts"
+  }
+}

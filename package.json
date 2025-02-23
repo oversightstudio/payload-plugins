@@ -5,14 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "cd dev && pnpm dev",
-    "build": "pnpm -F ./packages/* run build",
-    "release": "pnpm --filter ./packages/* publish --access public"
+    "build": "pnpm --filter=./packages/* run build",
+    "release": "pnpm --filter=./packages/* publish --access public"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "oversightstudio",
+  "license": "MIT",
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
-    "prettier": "^3.4.2"
+    "prettier": "^3.5.2"
   }
 }
