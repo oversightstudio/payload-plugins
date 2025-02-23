@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup'
+import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 
 export default defineConfig({
   entry: ['src/index.ts', 'src/fields/index.ts'],
@@ -14,4 +15,11 @@ export default defineConfig({
       '.scss': 'copy',
     }
   },
+  esbuildPlugins: [
+    preserveDirectivesPlugin({
+      directives: ['use client', 'use strict'],
+      include: /\.(js|ts|jsx|tsx)$/,
+      exclude: /node_modules/,
+    }),
+  ],
 })
