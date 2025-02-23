@@ -1,5 +1,11 @@
 # @oversightstudio/mux-video
 
+## 1.0.2
+
+### Patch Changes
+
+- 7f8ee60: Change build settings.
+
 ## 1.0.1
 
 ### Patch Changes
