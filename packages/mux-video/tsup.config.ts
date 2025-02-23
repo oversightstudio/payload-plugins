@@ -2,6 +2,14 @@ import { defineConfig } from 'tsup'
 import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 
 export default defineConfig({
+  external: [
+    '@types/react',
+    'typescript',
+    'tsup',
+    'react',
+    'react-dom',
+    'esbuild-plugin-preserve-directives',
+  ],
   entry: ['src/index.ts', 'src/fields/index.ts'],
   format: ['cjs', 'esm'],
   dts: true,
