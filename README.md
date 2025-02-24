@@ -1,6 +1,6 @@
 # Oversight Payload Plugins 
 
-Collection of Payload plugins made by [Oversight Studio](https://oversight.studio/).
+A collection of Payload plugins made by [Oversight Studio](https://oversight.studio/).
 
 ## Packages list:
 
