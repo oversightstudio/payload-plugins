@@ -69,6 +69,7 @@ export interface Config {
     users: User;
     media: Media;
     movies: Movie;
+    'sensitive-data': SensitiveDatum;
     'mux-video': MuxVideo;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -79,6 +80,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     movies: MoviesSelect<false> | MoviesSelect<true>;
+    'sensitive-data': SensitiveDataSelect<false> | SensitiveDataSelect<true>;
     'mux-video': MuxVideoSelect<false> | MuxVideoSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -166,6 +168,26 @@ export interface Movie {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sensitive-data".
+ */
+export interface SensitiveDatum {
+  id: number;
+  name?: string | null;
+  age?: string | null;
+  favoriteAges?: string[] | null;
+  gender?: string | null;
+  traits?: string[] | null;
+  auraFarmer?: string | null;
+  birthDate?: string | null;
+  jsonData?: string | null;
+  description?: string | null;
+  favoriteCode?: string | null;
+  powerLevel?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mux-video".
  */
 export interface MuxVideo {
@@ -213,6 +235,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'movies';
         value: number | Movie;
+      } | null)
+    | ({
+        relationTo: 'sensitive-data';
+        value: number | SensitiveDatum;
       } | null)
     | ({
         relationTo: 'mux-video';
@@ -301,6 +327,25 @@ export interface MediaSelect<T extends boolean = true> {
 export interface MoviesSelect<T extends boolean = true> {
   title?: T;
   trailer?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sensitive-data_select".
+ */
+export interface SensitiveDataSelect<T extends boolean = true> {
+  name?: T;
+  age?: T;
+  favoriteAges?: T;
+  gender?: T;
+  traits?: T;
+  auraFarmer?: T;
+  birthDate?: T;
+  jsonData?: T;
+  description?: T;
+  favoriteCode?: T;
+  powerLevel?: T;
   updatedAt?: T;
   createdAt?: T;
 }

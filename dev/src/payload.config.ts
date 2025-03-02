@@ -11,6 +11,7 @@ import { muxVideoPlugin } from '@oversightstudio/mux-video'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Movies } from './collections/Movies'
+import { SensitiveData } from './collections/SensitiveData'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -21,8 +22,12 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    autoLogin: {
+      email: "dev@email.com",
+      password: "123",
+    }
   },
-  collections: [Users, Media, Movies],
+  collections: [Users, Media, Movies, SensitiveData],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
