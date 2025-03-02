@@ -1,7 +1,7 @@
 {
   "name": "@oversightstudio/encrypted-fields",
   "type": "module",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Database field encryption for Payload.",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
