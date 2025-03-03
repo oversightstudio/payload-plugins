@@ -1,5 +1,18 @@
 # @oversightstudio/mux-video
 
+## 1.1.0
+
+### Minor Changes
+
+- 5f369a1: ### Added
+
+  - Added `gifUrl` option to playback options.
+  - Introduced `adminThumbnail` option, which can be `'gif'`, `'image'`, or `'none'` (default: `'gif'`).
+
+  ### Breaking Change
+
+  - Removed `gifPreviews` option in favor of `adminThumbnail`.
+
 ## 1.0.4
 
 ### Patch Changes
