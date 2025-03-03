@@ -211,6 +211,7 @@ export interface MuxVideo {
         playbackPolicy?: ('signed' | 'public') | null;
         playbackUrl?: string | null;
         posterUrl?: string | null;
+        gifUrl?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -368,6 +369,7 @@ export interface MuxVideoSelect<T extends boolean = true> {
         playbackPolicy?: T;
         playbackUrl?: T;
         posterUrl?: T;
+        gifUrl?: T;
         id?: T;
       };
   updatedAt?: T;

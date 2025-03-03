@@ -74,6 +74,7 @@ export default buildConfig({
 | `uploadSettings`           | `MuxVideoUploadSettings`                         | **Required** | Upload settings for Mux video assets.                                                                  |
 | `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
 | `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
+| `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
 
 ### `initSettings` Options 
 
@@ -84,7 +85,7 @@ export default buildConfig({
 | `webhookSecret`       | `string`    | **Required** | The secret used to validate Mux webhooks.                |
 | `jwtSigningKey`       | `string`    | *Optional* | Optional JWT signing key, required for signed URL setup. |
 | `jwtPrivateKey`       | `string`    | *Optional* | Optional JWT private key, required for signed URL setup. |
-| `gifPreviews`         | `boolean`   | `true`   | Determines whether to enable gif previews for videos on the videos collection list view.
+
 
 ### `uploadSettings` Options
 

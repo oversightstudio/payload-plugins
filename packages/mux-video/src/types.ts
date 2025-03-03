@@ -31,12 +31,6 @@ type MuxVideoInitSettings = {
    * Only required for signed URL setup.
    */
   jwtPrivateKey?: string
-
-  /**
-   * Determines whether to enable gif previews for videos on the videos collection list view.
-   * @default true
-   */
-  gifPreviews?: boolean
 }
 
 /**
@@ -87,6 +81,16 @@ export type MuxVideoPluginOptions = {
    * Determines whether the plugin is enabled.
    */
   enabled: boolean
+
+  /**
+   * Specifies the type of thumbnail to display for videos in the collection list view.
+   * - `"gif"`: Displays an animated GIF preview.
+   * - `"image"`: Displays a static image preview.
+   * - `"none"`: No thumbnail is displayed.
+   *
+   * @default "gif"
+   */
+  adminThumbnail?: 'gif' | 'image' | 'none'
 
   /**
    * Initialization settings for the Mux implementation.

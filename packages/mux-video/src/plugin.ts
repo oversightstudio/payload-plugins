@@ -22,6 +22,10 @@ export const muxVideoPlugin =
       return config
     }
 
+    if (!pluginOptions.adminThumbnail) {
+      pluginOptions.adminThumbnail = 'gif'
+    }
+
     const mux = new Mux(pluginOptions.initSettings)
 
     config.collections = [...(config.collections || []), MuxVideo(mux, pluginOptions)]

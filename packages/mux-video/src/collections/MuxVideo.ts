@@ -30,9 +30,11 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
         components: {
           Field: '@oversightstudio/mux-video/elements#MuxUploaderField',
           Cell:
-            pluginOptions.initSettings.gifPreviews === false
-              ? undefined
-              : '@oversightstudio/mux-video/elements#MuxUploaderCell',
+            pluginOptions.adminThumbnail === 'gif'
+              ? '@oversightstudio/mux-video/elements#MuxVideoGifCell'
+              : pluginOptions.adminThumbnail === 'image'
+                ? '@oversightstudio/mux-video/elements#MuxVideoImageCell'
+                : undefined,
         },
       },
     },
@@ -207,6 +209,44 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'thumbnail',
+                  })
+
+                  url.searchParams.set('token', token)
+                }
+
+                return url.toString()
+              },
+            ],
+          },
+        },
+        {
+          name: 'gifUrl',
+          label: 'Gif URL',
+          type: 'text',
+          virtual: true,
+          admin: {
+            hidden: true,
+          },
+          hooks: {
+            afterRead: [
+              async ({ data, siblingData }) => {
+                const playbackId = siblingData?.['playbackId']
+                const posterTimestamp = data?.['posterTimestamp']
+
+                if (!playbackId) {
+                  return null
+                }
+
+                const url = new URL(`https://image.mux.com/${playbackId}/animated.gif`)
+
+                if (typeof posterTimestamp === 'number') {
+                  url.searchParams.set('time', posterTimestamp.toString())
+                }
+
+                if (siblingData.playbackPolicy === 'signed') {
+                  const token = await mux.jwt.signPlaybackId(playbackId, {
+                    expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
+                    type: 'gif',
                   })
 
                   url.searchParams.set('token', token)

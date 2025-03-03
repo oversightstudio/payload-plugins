@@ -1,6 +1,6 @@
 import { DefaultCellComponentProps } from 'payload'
 
-export function MuxUploaderCell(props: DefaultCellComponentProps) {
+export function MuxVideoGifCell(props: DefaultCellComponentProps) {
   const row = props.rowData
 
   const playbackOption = row?.playbackOptions?.[0]
@@ -14,9 +14,9 @@ export function MuxUploaderCell(props: DefaultCellComponentProps) {
       style={{ width: 80, height: 80, objectFit: 'cover' }}
       loading="lazy"
       alt={row?.title}
-      src={playbackOption.posterUrl}
+      src={playbackOption.gifUrl}
     />
   )
 }
 
-export default MuxUploaderCell
+export default MuxVideoGifCell
