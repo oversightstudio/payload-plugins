@@ -3,6 +3,7 @@ import getAfterDeleteMuxVideoHook from '../hooks/afterDelete'
 import getBeforeChangeMuxVideoHook from '../hooks/beforeChange'
 import Mux from '@mux/mux-node'
 import { MuxVideoPluginOptions } from '../types'
+import { defaultAccessFunction } from '../lib/defaultAccessFunction'
 
 export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): CollectionConfig => ({
   slug: 'mux-video',
@@ -11,7 +12,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
     plural: 'Videos',
   },
   access: {
-    read: () => true,
+    read: ({ req }) => pluginOptions.access?.(req) ?? defaultAccessFunction(req),
   },
   admin: {
     useAsTitle: 'title',
