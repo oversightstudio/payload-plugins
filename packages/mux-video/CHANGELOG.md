@@ -1,5 +1,11 @@
 # @oversightstudio/mux-video
 
+## 1.1.1
+
+### Patch Changes
+
+- 55e7721: Implement better read-access permissions on the MuxVideo collection
+
 ## 1.1.0
 
 ### Minor Changes
