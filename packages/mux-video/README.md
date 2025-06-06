@@ -16,7 +16,7 @@ Features include:
 ## Payload Setup
 There are two possible setups for this plugin: The public setup, and the signed URLs setup. The main difference between the two is that the signed URLs setup requires setting up a little extra configuration, but that's about it.
 
-To get started, you’ll need to generate your MUX tokens and secrets from the MUX Dashboard. When configuring the webhook, set the URL to the automatically generated API endpoint provided by this plugin at `/api/mux/webhook`.
+To get started, you’ll need to generate your MUX tokens and secrets from the MUX Dashboard. When configuring the webhook, set the URL to the automatically generated API endpoint provided by this plugin at `/api/mux/webhook`. If you have set a custom API route in Payload config via `routes.api`, the API endpoint will be `<your_custom_api_route>/mux/webhook`.
 
 ### Public Setup
 ```tsx

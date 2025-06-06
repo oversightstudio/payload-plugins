@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import MuxPlayer from '@mux/mux-player-react'
 import MuxUploader from '@mux/mux-uploader-react'
-import { useForm, useFormFields } from '@payloadcms/ui'
+import { useConfig, useForm, useFormFields } from '@payloadcms/ui'
 import path from 'path'
 import './mux-uploader.scss'
 
 export const MuxUploaderField = () => {
+  const { config } = useConfig()
+  const apiUrl = config.routes.api
+
   const [uploadId, setUploadId] = useState('')
   const { assetId, setAssetId, title, setTitle, setFile, playbackUrl } = useFormFields(
     ([fields, dispatch]) => ({
@@ -28,7 +31,7 @@ export const MuxUploaderField = () => {
     console.log('get signed url')
 
     // Fetch the signed URL from the API
-    const response = await fetch(`/api/mux/upload`, {
+    const response = await fetch(`${apiUrl}/mux/upload`, {
       method: 'POST',
     })
 
@@ -75,7 +78,7 @@ export const MuxUploaderField = () => {
 
     /* When the upload succeeded, get the Asset ID from the server */
     let upload = await (
-      await fetch(`/api/mux/upload?id=${uploadId}`, {
+      await fetch(`${apiUrl}/mux/upload?id=${uploadId}`, {
         method: 'get',
       })
     ).json()
@@ -88,7 +91,7 @@ export const MuxUploaderField = () => {
       console.log(`Polling for asset_id...`)
       await new Promise((resolve) => setTimeout(resolve, 1000))
       upload = await (
-        await fetch(`/api/mux/upload?id=${uploadId}`, {
+        await fetch(`${apiUrl}/mux/upload?id=${uploadId}`, {
           method: 'get',
         })
       ).json()
