@@ -6,7 +6,7 @@ import { MuxVideoPluginOptions } from '../types'
 import { defaultAccessFunction } from '../lib/defaultAccessFunction'
 
 export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): CollectionConfig => ({
-  slug: 'mux-video',
+  slug: (pluginOptions.extendCollection as string) ?? 'mux-video',
   labels: {
     singular: 'Video',
     plural: 'Videos',
@@ -20,7 +20,9 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
   },
   hooks: {
     afterDelete: [getAfterDeleteMuxVideoHook(mux)],
-    beforeChange: [getBeforeChangeMuxVideoHook(mux)],
+    beforeChange: [
+      getBeforeChangeMuxVideoHook(mux, (pluginOptions.extendCollection as string) ?? 'mux-video'),
+    ],
   },
   fields: [
     {

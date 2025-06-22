@@ -1,5 +1,5 @@
 import Mux from '@mux/mux-node'
-import { PayloadHandler, PayloadRequest } from 'payload'
+import { PayloadHandler } from 'payload'
 import { MuxVideoPluginOptions } from '../types'
 import { defaultAccessFunction } from '../lib/defaultAccessFunction'
 

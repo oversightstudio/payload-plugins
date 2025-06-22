@@ -35,24 +35,24 @@
     }
   },
   "devDependencies": {
-    "@mux/mux-player-react": "^3.2.4",
-    "@payloadcms/ui": "^3.15.0",
-    "@types/react": "^19.0.1",
+    "@mux/mux-player-react": "^3.4.1",
+    "@payloadcms/ui": "^3.43.0",
+    "@types/react": "^19.1.8",
     "esbuild-plugin-preserve-directives": "^0.0.11",
-    "payload": "^3.15.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "payload": "^3.43.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tsup": "^8.3.6",
-    "typescript": "^5.7.2"
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@mux/mux-player-react": "^3.2.4",
-    "@payloadcms/ui": "^3.15.0",
-    "payload": "^3.15.1"
+    "@mux/mux-player-react": "^3.4.1",
+    "@payloadcms/ui": "^3.43.0",
+    "payload": "^3.43.0"
   },
   "dependencies": {
-    "@mux/mux-node": "^9.0.1",
-    "@mux/mux-uploader-react": "^1.1.1"
+    "@mux/mux-node": "^11.1.0",
+    "@mux/mux-uploader-react": "^1.2.0"
   },
   "publishConfig": {
     "exports": {

@@ -1,9 +1,18 @@
 import { PayloadHandler } from 'payload'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 import Mux from '@mux/mux-node'
+import { MuxVideoPluginOptions } from '../types'
+
+const handleAssetErrored = (assetId: string, errors: any) => {
+  console.error(`Error with assetId: ${assetId}, logging error and returning 204...`)
+  console.error(JSON.stringify(errors, null, 2))
+}
+
+const createSuccessResponse = () => new Response('Success!', { status: 200 })
+const createErrorResponse = () => new Response('Error', { status: 204 })
 
 export const muxWebhooksHandler =
-  (mux: Mux): PayloadHandler =>
+  (mux: Mux, pluginOptions: MuxVideoPluginOptions): PayloadHandler =>
   async (req) => {
     if (!req.json) {
       return Response.error()
@@ -17,60 +26,68 @@ export const muxWebhooksHandler =
 
     mux.webhooks.verifySignature(JSON.stringify(body), req.headers)
 
+    const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
+
     const event = body
+    const assetId = event.object?.id
 
-    if (event.type === 'video.asset.ready' || event.type === 'video.asset.deleted') {
-      try {
-        const assetId = event.object.id
-        const videos = await req.payload.find({
-          collection: 'mux-video',
-          where: {
-            assetId: {
-              equals: assetId,
-            },
-          },
-          limit: 1,
-          pagination: false,
-        })
+    const videos = await req.payload.find({
+      collection,
+      where: {
+        assetId: {
+          equals: assetId,
+        },
+      },
+      limit: 1,
+      pagination: false,
+    })
 
-        if (videos.totalDocs === 0) {
-          return new Response('Success!', {
-            status: 200,
-          })
-        }
+    const video = videos.totalDocs > 0 ? videos.docs[0] : null
 
-        const video = videos.docs[0]
+    // TODO: Maybe find a better way to handle this?
+    if (!video) {
+      return createSuccessResponse()
+    }
 
-        if (event.type === 'video.asset.ready') {
-          /* Update the video with the playbackId, aspectRatio, and duration */
-          const update = await req.payload.update({
-            collection: 'mux-video',
+    switch (event.type) {
+      case 'video.asset.ready':
+      case 'video.asset.updated': {
+        try {
+          await req.payload.update({
+            collection,
             id: video.id,
             data: {
               ...getAssetMetadata(event.data),
             },
           })
-        } else if (event.type === 'video.asset.deleted') {
+        } catch (err) {
+          return createErrorResponse()
+        }
+        break
+      }
+
+      case 'video.asset.deleted': {
+        try {
           await req.payload.delete({
-            collection: 'mux-video',
+            collection,
             id: video.id,
           })
+        } catch (err) {
+          return createErrorResponse()
         }
-      } catch (err: any) {
-        return new Response('Error', {
-          status: 204,
-        })
-        //   return res.status(err.status).json(err)
+        break
       }
-    } else if (event.type === 'video.asset.errored') {
-      if (event.data?.errors) {
-        console.error(`Error with assetId: ${event.object.id}, logging error and returning 204...`)
-        console.error(JSON.stringify(event.data.errors, null, 2))
+
+      case 'video.asset.errored': {
+        if (event.data?.errors) {
+          handleAssetErrored(assetId, event.data.errors)
+        }
+        break
       }
-    } else {
+
+      default:
+        break
     }
 
-    return new Response('Success!', {
-      status: 200,
-    })
+    return createSuccessResponse()
   }

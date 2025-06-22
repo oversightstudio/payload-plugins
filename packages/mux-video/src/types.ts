@@ -1,5 +1,5 @@
 import { AssetOptions } from '@mux/mux-node/resources/video/assets.mjs'
-import { PayloadRequest } from 'payload'
+import type { TypedCollection, PayloadRequest } from 'payload'
 
 /**
  * Initialization settings for the Mux implementation.
@@ -91,6 +91,11 @@ export type MuxVideoPluginOptions = {
    * @default "gif"
    */
   adminThumbnail?: 'gif' | 'image' | 'none'
+
+  /**
+   * The collection to use for the Mux video plugin.
+   */
+  extendCollection?: keyof TypedCollection
 
   /**
    * Initialization settings for the Mux implementation.

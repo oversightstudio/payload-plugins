@@ -16,7 +16,7 @@ Features include:
 ## Payload Setup
 There are two possible setups for this plugin: The public setup, and the signed URLs setup. The main difference between the two is that the signed URLs setup requires setting up a little extra configuration, but that's about it.
 
-To get started, you’ll need to generate your MUX tokens and secrets from the MUX Dashboard. When configuring the webhook, set the URL to the automatically generated API endpoint provided by this plugin at `/api/mux/webhook`.
+To get started, you’ll need to generate your MUX tokens and secrets from the MUX Dashboard. When configuring the webhook, set the URL to the automatically generated API endpoint provided by this plugin at `/api/mux/webhook`. If you have set a custom API route in Payload config via `routes.api`, the API endpoint will be `<your_custom_api_route>/mux/webhook`.
 
 ### Public Setup
 ```tsx
@@ -76,6 +76,7 @@ export default buildConfig({
 | `enabled`                  | `boolean`                                        | **Required** | Whether the plugin is enabled.                                                                         |
 | `initSettings`             | `MuxVideoInitSettings`                           | **Required** | Initialization settings for the Mux implementation.                                                    |
 | `uploadSettings`           | `MuxVideoUploadSettings`                         | **Required** | Upload settings for Mux video assets.                                                                  |
+| `extendCollection`         | `string`                                         | *Optional* | The slug of an existing collection to extend with Mux video functionality. |
 | `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
 | `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
 | `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
