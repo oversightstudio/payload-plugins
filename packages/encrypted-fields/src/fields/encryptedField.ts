@@ -76,5 +76,5 @@ export const encryptedField = (data: EncryptedFieldOptions): Field => {
         },
       },
     },
-  }
+  } as Field
 }
