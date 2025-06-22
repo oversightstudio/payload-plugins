@@ -35,7 +35,7 @@
     }
   },
   "devDependencies": {
-    "@mux/mux-player-react": "^3.2.4",
+    "@mux/mux-player-react": "^3.4.1",
     "@payloadcms/ui": "^3.43.0",
     "@types/react": "^19.0.1",
     "esbuild-plugin-preserve-directives": "^0.0.11",
@@ -46,13 +46,13 @@
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "@mux/mux-player-react": "^3.2.4",
+    "@mux/mux-player-react": "^3.4.1",
     "@payloadcms/ui": "^3.43.0",
     "payload": "^3.43.0"
   },
   "dependencies": {
-    "@mux/mux-node": "^9.0.1",
-    "@mux/mux-uploader-react": "^1.1.1"
+    "@mux/mux-node": "^11.1.0",
+    "@mux/mux-uploader-react": "^1.2.0"
   },
   "publishConfig": {
     "exports": {
