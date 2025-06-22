@@ -71,7 +71,7 @@ export interface Config {
     media: Media;
     movies: Movie;
     'sensitive-data': SensitiveDatum;
-    'mux-video': MuxVideo;
+    videos: Video;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -82,7 +82,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     movies: MoviesSelect<false> | MoviesSelect<true>;
     'sensitive-data': SensitiveDataSelect<false> | SensitiveDataSelect<true>;
-    'mux-video': MuxVideoSelect<false> | MuxVideoSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -189,9 +189,9 @@ export interface SensitiveDatum {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "mux-video".
+ * via the `definition` "videos".
  */
-export interface MuxVideo {
+export interface Video {
   id: number;
   /**
    * A unique title for this video that will help you identify it later.
@@ -243,8 +243,8 @@ export interface PayloadLockedDocument {
         value: number | SensitiveDatum;
       } | null)
     | ({
-        relationTo: 'mux-video';
-        value: number | MuxVideo;
+        relationTo: 'videos';
+        value: number | Video;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -353,9 +353,9 @@ export interface SensitiveDataSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "mux-video_select".
+ * via the `definition` "videos_select".
  */
-export interface MuxVideoSelect<T extends boolean = true> {
+export interface VideosSelect<T extends boolean = true> {
   title?: T;
   assetId?: T;
   duration?: T;

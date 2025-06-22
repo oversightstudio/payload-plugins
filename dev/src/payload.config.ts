@@ -12,6 +12,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Movies } from './collections/Movies'
 import { SensitiveData } from './collections/SensitiveData'
+import { Videos } from './collections/Videos'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -23,11 +24,11 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     autoLogin: {
-      email: "dev@email.com",
-      password: "123",
-    }
+      email: 'dev@email.com',
+      password: '123',
+    },
   },
-  collections: [Users, Media, Movies, SensitiveData],
+  collections: [Users, Media, Movies, SensitiveData, Videos],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -51,6 +52,7 @@ export default buildConfig({
     }),
     muxVideoPlugin({
       enabled: true,
+      extendCollection: 'videos',
       initSettings: {
         tokenId: process.env.MUX_TOKEN_ID || '',
         tokenSecret: process.env.MUX_TOKEN_SECRET || '',

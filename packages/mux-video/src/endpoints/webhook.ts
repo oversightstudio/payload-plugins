@@ -1,21 +1,7 @@
 import { PayloadHandler } from 'payload'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 import Mux from '@mux/mux-node'
-
-const findVideoByAssetId = async (payload: any, assetId: string) => {
-  const videos = await payload.find({
-    collection: 'mux-video',
-    where: {
-      assetId: {
-        equals: assetId,
-      },
-    },
-    limit: 1,
-    pagination: false,
-  })
-
-  return videos.totalDocs > 0 ? videos.docs[0] : null
-}
+import { MuxVideoPluginOptions } from '../types'
 
 const handleAssetErrored = (assetId: string, errors: any) => {
   console.error(`Error with assetId: ${assetId}, logging error and returning 204...`)
@@ -26,7 +12,7 @@ const createSuccessResponse = () => new Response('Success!', { status: 200 })
 const createErrorResponse = () => new Response('Error', { status: 204 })
 
 export const muxWebhooksHandler =
-  (mux: Mux): PayloadHandler =>
+  (mux: Mux, pluginOptions: MuxVideoPluginOptions): PayloadHandler =>
   async (req) => {
     if (!req.json) {
       return Response.error()
@@ -40,12 +26,25 @@ export const muxWebhooksHandler =
 
     mux.webhooks.verifySignature(JSON.stringify(body), req.headers)
 
+    const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
+
     const event = body
     const assetId = event.object?.id
 
-    const video = await findVideoByAssetId(req.payload, assetId)
+    const videos = await req.payload.find({
+      collection,
+      where: {
+        assetId: {
+          equals: assetId,
+        },
+      },
+      limit: 1,
+      pagination: false,
+    })
 
-    // TODO: Find a better way to handle this
+    const video = videos.totalDocs > 0 ? videos.docs[0] : null
+
+    // TODO: Maybe find a better way to handle this?
     if (!video) {
       return createSuccessResponse()
     }
@@ -55,7 +54,7 @@ export const muxWebhooksHandler =
       case 'video.asset.updated': {
         try {
           await req.payload.update({
-            collection: 'mux-video',
+            collection,
             id: video.id,
             data: {
               ...getAssetMetadata(event.data),
@@ -70,7 +69,7 @@ export const muxWebhooksHandler =
       case 'video.asset.deleted': {
         try {
           await req.payload.delete({
-            collection: 'mux-video',
+            collection,
             id: video.id,
           })
         } catch (err) {

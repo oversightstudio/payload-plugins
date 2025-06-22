@@ -3,7 +3,7 @@ import delay from '../lib/delay'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 import Mux from '@mux/mux-node'
 
-const getBeforeChangeMuxVideoHook = (mux: Mux): CollectionBeforeChangeHook => {
+const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
   return async ({ req, data: incomingData, operation, originalDoc }) => {
     let data = { ...incomingData }
     console.log(`beforeChangeHook: ${operation}`)
@@ -64,7 +64,7 @@ const getBeforeChangeMuxVideoHook = (mux: Mux): CollectionBeforeChangeHook => {
 
         /* Ensure the title is unique, since we're setting the filename equal to the title and the filename must be unique */
         const existingVideo = await req.payload.find({
-          collection: 'mux-video',
+          collection,
           where: {
             title: {
               contains: data.title,
