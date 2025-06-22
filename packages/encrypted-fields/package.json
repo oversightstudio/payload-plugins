@@ -31,13 +31,13 @@
     }
   },
   "devDependencies": {
-    "@payloadcms/ui": "^3.15.0",
+    "@payloadcms/ui": "^3.43.0",
     "payload": "^3.15.0",
     "tsup": "^8.3.6",
     "typescript": "5.7.2"
   },
   "peerDependencies": {
-    "@payloadcms/ui": "^3.15.0",
+    "@payloadcms/ui": "^3.43.0",
     "payload": "^3.15.1"
   },
   "publishConfig": {
