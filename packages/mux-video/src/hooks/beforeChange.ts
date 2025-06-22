@@ -7,7 +7,6 @@ const getBeforeChangeMuxVideoHook = (mux: Mux): CollectionBeforeChangeHook => {
   return async ({ req, data: incomingData, operation, originalDoc }) => {
     let data = { ...incomingData }
     console.log(`beforeChangeHook: ${operation}`)
-    console.log('data')
     try {
       if (!originalDoc?.assetId || originalDoc.assetId !== data.assetId) {
         console.log(
