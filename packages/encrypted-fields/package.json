@@ -34,7 +34,7 @@
     "@payloadcms/ui": "^3.43.0",
     "payload": "^3.43.0",
     "tsup": "^8.3.6",
-    "typescript": "5.7.2"
+    "typescript": "5.8.3"
   },
   "peerDependencies": {
     "@payloadcms/ui": "^3.43.0",
