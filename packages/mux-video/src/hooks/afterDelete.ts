@@ -14,7 +14,8 @@ const getAfterDeleteMuxVideoHook = (mux: Mux): CollectionAfterDeleteHook => {
         const response = await mux.video.assets.delete(assetId)
       }
     } catch (err: any) {
-      if (err.type === 'not_found') {
+      const type = err?.error?.error?.type ?? err?.error?.type ?? err?.type
+      if (type === 'not_found' || type === 'invalid_parameters') {
         console.log(`[payload-mux] Asset ${id} not found in Mux, continuing...`)
       } else {
         console.error(`[payload-mux] Error deleting asset ${id} from Mux...`)

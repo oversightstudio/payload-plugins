@@ -74,7 +74,7 @@ export const muxVideoPlugin =
         await incomingConfig.onInit(payload)
       }
 
-      onInitExtension(pluginOptions, payload)
+      await onInitExtension(pluginOptions, payload, mux)
     }
 
     return config
