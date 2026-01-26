@@ -108,6 +108,20 @@ export type MuxVideoPluginOptions = {
   uploadSettings: MuxVideoUploadSettings
 
   /**
+   * The image format to use for video posters.
+   * 
+   * @default "png"
+   */
+  posterExtension?: 'webp' | 'jpg' | 'png'
+
+  /**
+   * The image format to use for animated GIF previews.
+   * 
+   * @default "gif"
+   */
+  animatedGifExtension?: 'gif' | 'webp'
+
+  /**
    * An optional function to determine whether the current request is allowed to upload files.
    * Should return a boolean or a Promise resolving to a boolean.
    */
