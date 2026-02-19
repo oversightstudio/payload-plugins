@@ -1,5 +1,5 @@
 ---
-'@oversightstudio/mux-video': minor
+'@oversightstudio/mux-video': patch
 ---
 
 * **Fix**: Include posterTimestamp in JWT claims for signed thumbnail and GIF playback URLs
