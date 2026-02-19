@@ -212,6 +212,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'thumbnail',
+                    params: typeof posterTimestamp === 'number' ? { time: posterTimestamp.toString() } : undefined,
                   })
 
                   url.searchParams.set('token', token)
