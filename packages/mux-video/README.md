@@ -79,6 +79,8 @@ export default buildConfig({
 | `extendCollection`         | `string`                                         | *Optional* | The slug of an existing collection to extend with Mux video functionality. |
 | `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
 | `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
+| `posterExtension`          | `'webp' \| 'jpg' \| 'png'`                       | `"png"`  | The image format to use for video posters. |
+| `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The image format to use for animated preview thumbnails. |
 | `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
 
 ### `initSettings` Options 
