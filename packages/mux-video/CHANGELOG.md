@@ -1,5 +1,12 @@
 # @oversightstudio/mux-video
 
+## 1.3.0
+
+### Minor Changes
+
+- 2b1b2c2: \* **Fix**: Include posterTimestamp in JWT claims for signed thumbnail and GIF playback URLs
+  - **Feature**: Add support for configurable file extensions for poster images and animated previews
+
 ## 1.2.0
 
 ### Minor Changes
