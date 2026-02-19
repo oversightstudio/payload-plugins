@@ -202,7 +202,9 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   return null
                 }
 
-                const url = new URL(`https://image.mux.com/${playbackId}/thumbnail.png`)
+                const extension = pluginOptions.posterExtension ?? 'png'
+
+                const url = new URL(`https://image.mux.com/${playbackId}/thumbnail.${extension}`)
 
                 if (typeof posterTimestamp === 'number') {
                   url.searchParams.set('time', posterTimestamp.toString())
@@ -212,6 +214,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'thumbnail',
+                    params: typeof posterTimestamp === 'number' ? { time: posterTimestamp.toString() } : undefined,
                   })
 
                   url.searchParams.set('token', token)
@@ -240,7 +243,9 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   return null
                 }
 
-                const url = new URL(`https://image.mux.com/${playbackId}/animated.gif`)
+                const extension = pluginOptions.animatedGifExtension ?? 'gif'
+
+                const url = new URL(`https://image.mux.com/${playbackId}/animated.${extension}`)
 
                 if (typeof posterTimestamp === 'number') {
                   url.searchParams.set('time', posterTimestamp.toString())
@@ -250,6 +255,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'gif',
+                    params: typeof posterTimestamp === 'number' ? { time: posterTimestamp.toString() } : undefined,
                   })
 
                   url.searchParams.set('token', token)
