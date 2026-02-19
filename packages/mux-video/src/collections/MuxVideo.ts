@@ -202,7 +202,9 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   return null
                 }
 
-                const url = new URL(`https://image.mux.com/${playbackId}/thumbnail.png`)
+                const extension = pluginOptions.posterExtension ?? 'png'
+
+                const url = new URL(`https://image.mux.com/${playbackId}/thumbnail.${extension}`)
 
                 if (typeof posterTimestamp === 'number') {
                   url.searchParams.set('time', posterTimestamp.toString())
@@ -241,7 +243,9 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   return null
                 }
 
-                const url = new URL(`https://image.mux.com/${playbackId}/animated.gif`)
+                const extension = pluginOptions.animatedGifExtension ?? 'gif'
+
+                const url = new URL(`https://image.mux.com/${playbackId}/animated.${extension}`)
 
                 if (typeof posterTimestamp === 'number') {
                   url.searchParams.set('time', posterTimestamp.toString())
