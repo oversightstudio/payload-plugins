@@ -82,6 +82,8 @@ export default buildConfig({
 | `posterExtension`          | `'webp' \| 'jpg' \| 'png'`                       | `"png"`  | The image format to use for video posters. |
 | `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The image format to use for animated preview thumbnails. |
 | `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
+| `autoCreateOnWebhook`    | `boolean`                                        | `false`  | If enabled, the Mux webhook will automatically create videos that are missing in Payload when webhooks are received from Mux. Useful for uploading videos directly in Mux and automatically backfilling them in Payload. |
+
 
 ### `initSettings` Options 
 

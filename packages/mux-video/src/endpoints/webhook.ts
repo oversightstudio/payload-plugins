@@ -44,8 +44,27 @@ export const muxWebhooksHandler =
 
     const video = videos.totalDocs > 0 ? videos.docs[0] : null
 
-    // TODO: Maybe find a better way to handle this?
     if (!video) {
+      if (
+        pluginOptions.autoCreateOnWebhook &&
+        (event.type === 'video.asset.created' ||
+          event.type === 'video.asset.ready' ||
+          event.type === 'video.asset.updated')
+      ) {
+        try {
+          await req.payload.create({
+            collection,
+            data: {
+              title: event.data.meta?.title || assetId,
+              assetId,
+              ...getAssetMetadata(event.data),
+            },
+          })
+        } catch (err) {
+          return createErrorResponse()
+        }
+      }
+
       return createSuccessResponse()
     }
 
