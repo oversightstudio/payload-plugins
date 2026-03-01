@@ -109,14 +109,14 @@ export type MuxVideoPluginOptions = {
 
   /**
    * The image format to use for video posters.
-   * 
+   *
    * @default "png"
    */
   posterExtension?: 'webp' | 'jpg' | 'png'
 
   /**
    * The image format to use for animated GIF previews.
-   * 
+   *
    * @default "gif"
    */
   animatedGifExtension?: 'gif' | 'webp'
@@ -131,4 +131,14 @@ export type MuxVideoPluginOptions = {
    * Options for generating signed URLs for video playback.
    */
   signedUrlOptions?: MuxVideoSignedUrlOptions
+
+  /**
+   * When enabled, the webhook will automatically create a video in Payload
+   * when it receives a `video.asset.created`, `video.asset.ready`, or
+   * `video.asset.updated` event from Mux for an asset that doesn't exist
+   * in Payload.
+   *
+   * @default false
+   */
+  autoCreateOnWebhook?: boolean
 }
