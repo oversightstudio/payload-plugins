@@ -1,5 +1,15 @@
 # @oversightstudio/mux-video
 
+## 1.4.0
+
+### Minor Changes
+
+- 9094ee7: Feature: Add `autoCreateOnWebhook` option to automatically create videos that are missing from Payload collection
+
+### Patch Changes
+
+- c93a31d: Remove debug console.log/console.error statements from mux-video plugin. Error logging in webhook handler now uses Payload's built-in logger.
+
 ## 1.3.0
 
 ### Minor Changes
