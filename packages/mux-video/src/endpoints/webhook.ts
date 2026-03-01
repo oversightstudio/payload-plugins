@@ -3,9 +3,9 @@ import { getAssetMetadata } from '../lib/getAssetMetadata'
 import Mux from '@mux/mux-node'
 import { MuxVideoPluginOptions } from '../types'
 
-const handleAssetErrored = (assetId: string, errors: any) => {
-  console.error(`Error with assetId: ${assetId}, logging error and returning 204...`)
-  console.error(JSON.stringify(errors, null, 2))
+const handleAssetErrored = (req: any, assetId: string, errors: any) => {
+  req.payload.logger.error(`[payload-mux] Error with assetId: ${assetId}`)
+  req.payload.logger.error(JSON.stringify(errors, null, 2))
 }
 
 const createSuccessResponse = () => new Response('Success!', { status: 200 })
@@ -99,7 +99,7 @@ export const muxWebhooksHandler =
 
       case 'video.asset.errored': {
         if (event.data?.errors) {
-          handleAssetErrored(assetId, event.data.errors)
+          handleAssetErrored(req, assetId, event.data.errors)
         }
         break
       }
