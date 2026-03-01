@@ -1,5 +1,12 @@
 # dev
 
+## 1.0.15
+
+### Patch Changes
+
+- Updated dependencies [9094ee7]
+  - @oversightstudio/mux-video@1.4.0
+
 ## 1.0.14
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 {
   "name": "@oversightstudio/mux-video",
   "type": "module",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Brings Mux Video to PayloadCMS.",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
