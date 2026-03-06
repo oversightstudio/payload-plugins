@@ -122,6 +122,17 @@ export type MuxVideoPluginOptions = {
   animatedGifExtension?: 'gif' | 'webp'
 
   /**
+   * What to do with mismatching videos on initialization.
+   * - `"createOnly"`: Create entries for videos that do not exist in the Payload collection.
+   * - `"deleteOnly"`: Delete entries for videos that no longer exist on Mux.
+   * - `"createAndDelete"`: Create entries for missing videos and delete entries for videos that no longer exist on Mux.
+   * - `"none"`: Do nothing on initialization.
+   *
+   * @default "none"
+   */
+  onInitBehavior?: "createOnly" | "deleteOnly" | "createAndDelete" | "none"
+
+  /**
    * An optional function to determine whether the current request is allowed to upload files.
    * Should return a boolean or a Promise resolving to a boolean.
    */
