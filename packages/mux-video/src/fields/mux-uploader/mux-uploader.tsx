@@ -28,8 +28,6 @@ export const MuxUploaderField = () => {
   const { submit, setProcessing } = useForm()
 
   const getSignedUrl = useCallback(async () => {
-    console.log('get signed url')
-
     // Fetch the signed URL from the API
     const response = await fetch(`${apiUrl}/mux/upload`, {
       method: 'POST',
@@ -46,9 +44,6 @@ export const MuxUploaderField = () => {
   }, [])
 
   const onUploadStart = (args: any) => {
-    console.log('onUploadStart')
-    console.log(args)
-
     const {
       detail: { file },
     } = args
@@ -72,10 +67,6 @@ export const MuxUploaderField = () => {
     /* Show "Creating..." overlay */
     setProcessing(true)
 
-    /* Args don't contain asset ID, so we need to fetch it from the server */
-    console.log(`Args in onSuccess`)
-    console.log(args)
-
     /* When the upload succeeded, get the Asset ID from the server */
     let upload = await (
       await fetch(`${apiUrl}/mux/upload?id=${uploadId}`, {
@@ -83,19 +74,14 @@ export const MuxUploaderField = () => {
       })
     ).json()
 
-    console.log(`First attempt fetching upload in onSuccess`)
-    console.log(upload)
-
     /* Sometimes the upload doesn't have the asset_id yet, poll every second until it does (this should only take a moment) */
     while (!upload.asset_id) {
-      console.log(`Polling for asset_id...`)
       await new Promise((resolve) => setTimeout(resolve, 1000))
       upload = await (
         await fetch(`${apiUrl}/mux/upload?id=${uploadId}`, {
           method: 'get',
         })
       ).json()
-      console.log(upload)
     }
 
     const { asset_id } = upload

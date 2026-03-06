@@ -79,10 +79,14 @@ export default buildConfig({
 | `extendCollection`         | `string`                                         | *Optional* | The slug of an existing collection to extend with Mux video functionality. |
 | `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
 | `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
+| `posterExtension`          | `'webp' \| 'jpg' \| 'png'`                       | `"png"`  | The image format to use for video posters. |
+| `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The image format to use for animated preview thumbnails. |
 | `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
 | `posterExtension`          | `'jpg' \| 'png' \| 'webp'`                       | `"png"`  | The file extension to use for generated poster images. |
 | `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The file extension to use for generated animated gifs. |
 | `onInitBehavior`           | `"createOnly" \| "deleteOnly" \| "createAndDelete" \| "none"` | `"none"` | What to do on plugin initialization when there are discrepancies between videos in Mux and entries in the Payload collection. |
+| `autoCreateOnWebhook`    | `boolean`                                        | `false`  | If enabled, the Mux webhook will automatically create videos that are missing in Payload when webhooks are received from Mux. Useful for uploading videos directly in Mux and automatically backfilling them in Payload. |
+
 
 ### `initSettings` Options 
 

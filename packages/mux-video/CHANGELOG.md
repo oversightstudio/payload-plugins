@@ -1,5 +1,22 @@
 # @oversightstudio/mux-video
 
+## 1.4.0
+
+### Minor Changes
+
+- 9094ee7: Feature: Add `autoCreateOnWebhook` option to automatically create videos that are missing from Payload collection
+
+### Patch Changes
+
+- c93a31d: Remove debug console.log/console.error statements from mux-video plugin. Error logging in webhook handler now uses Payload's built-in logger.
+
+## 1.3.0
+
+### Minor Changes
+
+- 2b1b2c2: \* **Fix**: Include posterTimestamp in JWT claims for signed thumbnail and GIF playback URLs
+  - **Feature**: Add support for configurable file extensions for poster images and animated previews
+
 ## 1.2.0
 
 ### Minor Changes

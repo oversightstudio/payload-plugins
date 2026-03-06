@@ -6,18 +6,11 @@ import Mux from '@mux/mux-node'
 const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
   return async ({ req, data: incomingData, operation, originalDoc }) => {
     let data = { ...incomingData }
-    console.log(`beforeChangeHook: ${operation}`)
     try {
       if (!originalDoc?.assetId || originalDoc.assetId !== data.assetId) {
-        console.log(
-          `[payload-mux] Asset ID created for the first time or changed. Creating or updating...`,
-        )
-
         /* If this is an update, delete the old video first */
         if (operation === 'update' && originalDoc.assetId !== data.assetId) {
-          console.log(`[payload-mux] Deleting original asset: ${originalDoc.assetId}...`)
-          const response = await mux.video.assets.delete(originalDoc.assetId)
-          console.log(response)
+          await mux.video.assets.delete(originalDoc.assetId)
         }
 
         /* Now, get the asset and append its' information to the doc */
@@ -28,21 +21,15 @@ const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBe
         const timeout = Date.now() + pollingLimit * 1000
         while (asset.status === 'preparing') {
           if (Date.now() > timeout) {
-            console.log(
-              `[payload-mux] Asset is still preparing after ${pollingLimit} seconds, giving up and letting the webhook handle it...`,
-            )
             break
           }
-          console.log(`[payload-mux] Asset is preparing, trying again in ${delayDuration}ms`)
           await delay(delayDuration)
           asset = await mux.video.assets.retrieve(data.assetId)
         }
 
         if (asset.status === 'errored') {
           /* If the asset errored, delete it and throw an error */
-          console.log('Error while preparing asset. Deleting it and throwing error...')
-          const response = await mux.video.assets.delete(data.assetId)
-          console.log(response)
+          await mux.video.assets.delete(data.assetId)
           throw new Error(
             `Unable to prepare asset: ${asset.status}. It's been deleted, please try again.`,
           )
@@ -50,13 +37,10 @@ const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBe
 
         /* If the asset is ready, we can get the metadata now */
         if (asset.status === 'ready') {
-          console.log(`[payload-mux] Asset is ready, getting metadata...`)
           data = {
             ...data,
             ...getAssetMetadata(asset),
           }
-        } else {
-          console.log(`[payload-mux] Asset is not ready, letting the webhook handle it...`)
         }
 
         /* Override some of the built-in file data */
