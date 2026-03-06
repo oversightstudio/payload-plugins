@@ -80,6 +80,9 @@ export default buildConfig({
 | `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
 | `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
 | `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
+| `posterExtension`          | `'jpg' \| 'png' \| 'webp'`                       | `"png"`  | The file extension to use for generated poster images. |
+| `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The file extension to use for generated animated gifs. |
+| `onInitBehavior`           | `"createOnly" \| "deleteOnly" \| "createAndDelete" \| "none"` | `"none"` | What to do on plugin initialization when there are discrepancies between videos in Mux and entries in the Payload collection. |
 
 ### `initSettings` Options 
 
