@@ -15,8 +15,10 @@ export const onInitExtension = async (
 
     const videos = await mux.video.assets.list()
     const ids = videos.data.map((video) => video.id)
+    const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
+
     const existingVideos = await payload.find({
-      collection: (pluginOptions.extendCollection as string) ?? 'mux-video',
+      collection,
       where: {
         assetId: {
           in: ids,
@@ -25,7 +27,6 @@ export const onInitExtension = async (
       limit: videos.data.length,
     })
 
-    const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
     const shouldCreate =
       pluginOptions.onInitBehavior === 'createOnly' ||
       pluginOptions.onInitBehavior === 'createAndDelete'
@@ -56,7 +57,7 @@ export const onInitExtension = async (
 
     if (shouldDelete) {
       const extraVideos = await payload.find({
-        collection: (pluginOptions.extendCollection as string) ?? 'mux-video',
+        collection,
         limit: 100,
         where: {
           assetId: {
