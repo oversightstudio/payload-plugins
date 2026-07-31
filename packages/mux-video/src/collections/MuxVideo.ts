@@ -1,7 +1,6 @@
 import type Mux from '@mux/mux-node'
 import type { CollectionConfig } from 'payload'
 import getAfterDeleteMuxVideoHook from '../hooks/afterDelete'
-import getAfterReadMuxVideoHook from '../hooks/afterRead'
 import getBeforeChangeMuxVideoHook from '../hooks/beforeChange'
 import { defaultAccessFunction } from '../lib/defaultAccessFunction'
 import type { MuxVideoPluginOptions } from '../types'
@@ -20,9 +19,6 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
     defaultColumns: ['title', 'muxUploader', 'duration'],
   },
   hooks: {
-    afterRead: [
-      getAfterReadMuxVideoHook(mux, (pluginOptions.extendCollection as string) ?? 'mux-video'),
-    ],
     afterDelete: [getAfterDeleteMuxVideoHook(mux)],
     beforeChange: [
       getBeforeChangeMuxVideoHook(mux, (pluginOptions.extendCollection as string) ?? 'mux-video'),
@@ -59,6 +55,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
       name: 'assetId',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
         readOnly: true,
         condition: (data) => data.assetId,

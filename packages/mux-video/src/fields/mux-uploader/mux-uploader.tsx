@@ -9,6 +9,7 @@ import './mux-uploader.scss'
 
 const ENCODING_POLL_INTERVAL = 5000
 const ENCODING_POLL_LIMIT = 36
+const ENCODING_SYNC_EVERY = 6
 
 export const MuxUploaderField = () => {
   const { config } = useConfig()
@@ -128,30 +129,41 @@ export const MuxUploaderField = () => {
 
     let isMounted = true
     let pollCount = 0
+    let interval: number | undefined
 
     const pollForEncodedVideo = async () => {
       if (pollCount >= ENCODING_POLL_LIMIT) {
+        if (interval) {
+          window.clearInterval(interval)
+        }
         return
       }
 
       pollCount += 1
 
       try {
-        const response = await fetch(`${apiUrl}/${collectionSlug}/${id}?depth=2&draft=false`)
+        const shouldSyncWithMux = pollCount % ENCODING_SYNC_EVERY === 0
+        const response = await fetch(
+          shouldSyncWithMux
+            ? `${apiUrl}/mux/sync?id=${encodeURIComponent(id)}`
+            : `${apiUrl}/${collectionSlug}/${id}?depth=2&draft=false`,
+          shouldSyncWithMux ? { method: 'POST' } : undefined,
+        )
 
         if (!response.ok) {
           return
         }
 
         const video = await response.json()
+        const isReady = shouldSyncWithMux
+          ? video?.ready === true
+          : Array.isArray(video?.playbackOptions) && video.playbackOptions.length > 0
 
-        if (
-          isMounted &&
-          Array.isArray(video?.playbackOptions) &&
-          video.playbackOptions.length > 0 &&
-          !hasReloadedAfterEncoding.current
-        ) {
+        if (isMounted && isReady && !hasReloadedAfterEncoding.current) {
           hasReloadedAfterEncoding.current = true
+          if (interval) {
+            window.clearInterval(interval)
+          }
           window.location.reload()
         }
       } catch (err) {
@@ -161,13 +173,15 @@ export const MuxUploaderField = () => {
 
     void pollForEncodedVideo()
 
-    const interval = window.setInterval(() => {
+    interval = window.setInterval(() => {
       void pollForEncodedVideo()
     }, ENCODING_POLL_INTERVAL)
 
     return () => {
       isMounted = false
-      window.clearInterval(interval)
+      if (interval) {
+        window.clearInterval(interval)
+      }
     }
   }, [apiUrl, assetId?.value, collectionSlug, id, playbackUrl])
 

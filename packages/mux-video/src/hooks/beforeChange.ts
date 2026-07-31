@@ -4,8 +4,10 @@ import delay from '../lib/delay'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 
 const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
-  return async ({ req, data: incomingData, operation, originalDoc }) => {
+  return async ({ req, data: incomingData, operation, originalDoc, context }) => {
     let data = { ...incomingData }
+    const skipMuxSync = (context as any)?.skipMuxVideoBeforeChangeSync
+
     try {
       const assetId = data.assetId
       const hasIncomingAsset = typeof assetId === 'string' && assetId.length > 0
@@ -16,38 +18,40 @@ const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBe
           return data
         }
 
-        /* If this is an update, delete the old video first */
-        if (operation === 'update' && hasAssetChanged) {
-          await mux.video.assets.delete(originalDoc.assetId)
-        }
-
-        /* Now, get the asset and append its' information to the doc */
-        let asset = await mux.video.assets.retrieve(assetId)
-        /* Poll for up to 6 seconds, then the webhook will handle setting the metadata */
-        const delayDuration = 1500
-        const pollingLimit = 6
-        const timeout = Date.now() + pollingLimit * 1000
-        while (asset.status === 'preparing') {
-          if (Date.now() > timeout) {
-            break
+        if (!skipMuxSync) {
+          /* If this is an update, delete the old video first */
+          if (operation === 'update' && hasAssetChanged) {
+            await mux.video.assets.delete(originalDoc.assetId)
           }
-          await delay(delayDuration)
-          asset = await mux.video.assets.retrieve(assetId)
-        }
 
-        if (asset.status === 'errored') {
-          /* If the asset errored, delete it and throw an error */
-          await mux.video.assets.delete(assetId)
-          throw new Error(
-            `Unable to prepare asset: ${asset.status}. It's been deleted, please try again.`,
-          )
-        }
+          /* Now, get the asset and append its' information to the doc */
+          let asset = await mux.video.assets.retrieve(assetId)
+          /* Poll for up to 6 seconds, then the webhook will handle setting the metadata */
+          const delayDuration = 1500
+          const pollingLimit = 6
+          const timeout = Date.now() + pollingLimit * 1000
+          while (asset.status === 'preparing') {
+            if (Date.now() > timeout) {
+              break
+            }
+            await delay(delayDuration)
+            asset = await mux.video.assets.retrieve(assetId)
+          }
 
-        /* If the asset is ready, we can get the metadata now */
-        if (asset.status === 'ready') {
-          data = {
-            ...data,
-            ...getAssetMetadata(asset),
+          if (asset.status === 'errored') {
+            /* If the asset errored, delete it and throw an error */
+            await mux.video.assets.delete(assetId)
+            throw new Error(
+              `Unable to prepare asset: ${asset.status}. It's been deleted, please try again.`,
+            )
+          }
+
+          /* If the asset is ready, we can get the metadata now */
+          if (asset.status === 'ready') {
+            data = {
+              ...data,
+              ...getAssetMetadata(asset),
+            }
           }
         }
 
