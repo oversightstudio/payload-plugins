@@ -166,6 +166,109 @@ test('delete reconciliation keeps an entry when a fresh retrieve finds the asset
   assert.equal(deleteCalls, 0)
 })
 
+test('delete reconciliation keeps an entry when Mux cannot confirm absence', async () => {
+  let deleteCalls = 0
+  const logger = makeLogger()
+
+  await onInitExtension(
+    {
+      onInitBehavior: 'deleteOnly',
+      uploadSettings: { cors_origin: '*' },
+    },
+    {
+      delete: async () => {
+        deleteCalls += 1
+      },
+      find: async () => ({ docs: [{ assetId: 'unknown', id: 'doc' }], totalDocs: 1 }),
+      logger,
+    } as never,
+    {
+      video: {
+        assets: {
+          list: makeList([]),
+          retrieve: async () => {
+            throw { status: 503 }
+          },
+        },
+      },
+    } as never,
+  )
+
+  assert.equal(deleteCalls, 0)
+  assert.equal(logger.errors.length, 1)
+})
+
+test('simultaneous reconciliation treats an already-created entry as success', async () => {
+  let findCalls = 0
+  const logger = makeLogger()
+
+  await onInitExtension(
+    {
+      onInitBehavior: 'createOnly',
+      uploadSettings: { cors_origin: '*' },
+    },
+    {
+      create: async () => {
+        throw new Error('unique constraint')
+      },
+      find: async () => {
+        findCalls += 1
+        return findCalls === 1
+          ? { docs: [], totalDocs: 0 }
+          : { docs: [{ assetId: 'asset', id: 'other-replica' }], totalDocs: 1 }
+      },
+      logger,
+    } as never,
+    {
+      video: {
+        assets: {
+          list: makeList([makeAsset('asset')]),
+        },
+      },
+    } as never,
+  )
+
+  assert.equal(findCalls, 2)
+  assert.equal(logger.errors.length, 0)
+})
+
+test('simultaneous reconciliation treats an already-deleted entry as success', async () => {
+  let findCalls = 0
+  const logger = makeLogger()
+
+  await onInitExtension(
+    {
+      onInitBehavior: 'deleteOnly',
+      uploadSettings: { cors_origin: '*' },
+    },
+    {
+      delete: async () => {
+        throw new Error('document no longer exists')
+      },
+      find: async () => {
+        findCalls += 1
+        return findCalls === 1
+          ? { docs: [{ assetId: 'missing', id: 'doc' }], totalDocs: 1 }
+          : { docs: [], totalDocs: 0 }
+      },
+      logger,
+    } as never,
+    {
+      video: {
+        assets: {
+          list: makeList([]),
+          retrieve: async () => {
+            throw { status: 404 }
+          },
+        },
+      },
+    } as never,
+  )
+
+  assert.equal(findCalls, 2)
+  assert.equal(logger.errors.length, 0)
+})
+
 test('a failed Mux listing performs no Payload reads or mutations', async () => {
   let payloadCalls = 0
   const logger = makeLogger()

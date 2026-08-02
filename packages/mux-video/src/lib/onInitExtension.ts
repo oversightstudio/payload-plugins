@@ -133,12 +133,31 @@ export const onInitExtension = async (
           }
         }
 
-        await payload.delete({
-          collection,
-          context: deleteReconciliationContext,
-          id: video.id,
-          overrideAccess: true,
-        })
+        try {
+          await payload.delete({
+            collection,
+            context: deleteReconciliationContext,
+            id: video.id,
+            overrideAccess: true,
+          })
+        } catch (err) {
+          // Another replica may have removed the same stale entry after our snapshot.
+          const stillExists = await payload.find({
+            collection,
+            depth: 0,
+            limit: 1,
+            overrideAccess: true,
+            where: {
+              id: {
+                equals: video.id,
+              },
+            },
+          })
+
+          if (stillExists.totalDocs > 0) {
+            throw err
+          }
+        }
       }
     }
   } catch (err: unknown) {
