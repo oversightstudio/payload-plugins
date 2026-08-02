@@ -9,7 +9,8 @@ import './mux-uploader.scss'
 
 const ENCODING_POLL_INTERVAL = 5000
 const ENCODING_POLL_LIMIT = 36
-const ENCODING_SYNC_EVERY = 6
+const ENCODING_SYNC_INTERVAL = 10000
+const ENCODING_SYNC_EVERY = ENCODING_SYNC_INTERVAL / ENCODING_POLL_INTERVAL
 
 export const MuxUploaderField = () => {
   const { config } = useConfig()
