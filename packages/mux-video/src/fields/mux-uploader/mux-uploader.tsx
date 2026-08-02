@@ -1,15 +1,21 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
 import MuxPlayer from '@mux/mux-player-react'
 import MuxUploader from '@mux/mux-uploader-react'
-import { useConfig, useForm, useFormFields } from '@payloadcms/ui'
+import { useConfig, useDocumentInfo, useForm, useFormFields } from '@payloadcms/ui'
 import path from 'path'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './mux-uploader.scss'
+
+const ENCODING_POLL_INTERVAL = 5000
+const ENCODING_POLL_LIMIT = 36
+const ENCODING_SYNC_EVERY = 6
 
 export const MuxUploaderField = () => {
   const { config } = useConfig()
   const apiUrl = config.routes.api
+  const { collectionSlug, id } = useDocumentInfo()
+  const hasReloadedAfterEncoding = useRef(false)
 
   const [uploadId, setUploadId] = useState('')
   const { assetId, setAssetId, title, setTitle, setFile, playbackUrl } = useFormFields(
@@ -109,6 +115,75 @@ export const MuxUploaderField = () => {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (
+      !assetId?.value ||
+      playbackUrl ||
+      !collectionSlug ||
+      !id ||
+      hasReloadedAfterEncoding.current
+    ) {
+      return
+    }
+
+    let isMounted = true
+    let pollCount = 0
+    let interval: number | undefined
+
+    const pollForEncodedVideo = async () => {
+      if (pollCount >= ENCODING_POLL_LIMIT) {
+        if (interval) {
+          window.clearInterval(interval)
+        }
+        return
+      }
+
+      pollCount += 1
+
+      try {
+        const shouldSyncWithMux = pollCount % ENCODING_SYNC_EVERY === 0
+        const response = await fetch(
+          shouldSyncWithMux
+            ? `${apiUrl}/mux/sync?id=${encodeURIComponent(id)}`
+            : `${apiUrl}/${collectionSlug}/${id}?depth=2&draft=false`,
+          shouldSyncWithMux ? { method: 'POST' } : undefined,
+        )
+
+        if (!response.ok) {
+          return
+        }
+
+        const video = await response.json()
+        const isReady = shouldSyncWithMux
+          ? video?.ready === true
+          : Array.isArray(video?.playbackOptions) && video.playbackOptions.length > 0
+
+        if (isMounted && isReady && !hasReloadedAfterEncoding.current) {
+          hasReloadedAfterEncoding.current = true
+          if (interval) {
+            window.clearInterval(interval)
+          }
+          window.location.reload()
+        }
+      } catch (err) {
+        // Keep the admin UI in the encoding state if the temporary poll fails.
+      }
+    }
+
+    void pollForEncodedVideo()
+
+    interval = window.setInterval(() => {
+      void pollForEncodedVideo()
+    }, ENCODING_POLL_INTERVAL)
+
+    return () => {
+      isMounted = false
+      if (interval) {
+        window.clearInterval(interval)
+      }
+    }
+  }, [apiUrl, assetId?.value, collectionSlug, id, playbackUrl])
 
   //  There are three states: before upload, when we show the uploader. When the asset exists, we show the player. And when the asset is preparing, we show a message.
   return (

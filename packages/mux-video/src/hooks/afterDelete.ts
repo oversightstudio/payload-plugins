@@ -1,5 +1,5 @@
-import { CollectionAfterDeleteHook } from 'payload'
-import Mux from '@mux/mux-node'
+import type Mux from '@mux/mux-node'
+import type { CollectionAfterDeleteHook } from 'payload'
 
 const getAfterDeleteMuxVideoHook = (mux: Mux): CollectionAfterDeleteHook => {
   return async ({ doc, context }: any) => {

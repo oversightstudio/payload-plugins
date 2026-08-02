@@ -1,6 +1,7 @@
 import type { Config } from 'payload'
 import { MuxVideo } from './collections/MuxVideo'
 import { createMuxUploadHandler, getMuxUploadHandler } from './endpoints/upload'
+import { syncMuxVideoHandler } from './endpoints/sync'
 import { muxWebhooksHandler } from './endpoints/webhook'
 import { onInitExtension } from './lib/onInitExtension'
 import type { MuxVideoPluginOptions } from './types'
@@ -55,6 +56,11 @@ export const muxVideoPlugin =
         method: 'get',
         path: '/mux/upload',
         handler: getMuxUploadHandler(mux, pluginOptions),
+      },
+      {
+        method: 'post',
+        path: '/mux/sync',
+        handler: syncMuxVideoHandler(mux, pluginOptions),
       },
       {
         path: '/mux/webhook',
