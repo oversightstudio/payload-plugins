@@ -1,5 +1,12 @@
 # @oversightstudio/mux-video
 
+## 1.4.1
+
+### Patch Changes
+
+- 125521c: Make Mux encoding recovery bounded and admin-driven, make webhook processing fast and idempotent, await upload authorization, enforce document-level sync permissions, and defer replacement cleanup until after a successful document update.
+- 81e23cb: Add safe, paginated, opt-in background reconciliation between Mux assets and Payload video entries.
+
 ## 1.4.0
 
 ### Minor Changes
