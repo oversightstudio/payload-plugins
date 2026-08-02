@@ -2,7 +2,11 @@ import { CollectionAfterDeleteHook } from 'payload'
 import Mux from '@mux/mux-node'
 
 const getAfterDeleteMuxVideoHook = (mux: Mux): CollectionAfterDeleteHook => {
-  return async ({ id, doc }: any) => {
+  return async ({ doc, context }: any) => {
+    if (context?.skipMuxVideoAfterDeleteSync) {
+      return doc
+    }
+
     const { assetId } = doc
     try {
       // Check if the asset still exists in Mux. If it was deleted there first, we don't need to do anything

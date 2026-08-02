@@ -55,6 +55,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
       name: 'assetId',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
         readOnly: true,
         condition: (data) => data.assetId,

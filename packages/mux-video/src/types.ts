@@ -130,7 +130,7 @@ export type MuxVideoPluginOptions = {
    *
    * @default "none"
    */
-  onInitBehavior?: "createOnly" | "deleteOnly" | "createAndDelete" | "none"
+  onInitBehavior?: 'createOnly' | 'deleteOnly' | 'createAndDelete' | 'none'
 
   /**
    * An optional function to determine whether the current request is allowed to upload files.
