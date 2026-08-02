@@ -1,45 +1,52 @@
-import { CollectionBeforeChangeHook } from 'payload'
+import type Mux from '@mux/mux-node'
+import type { CollectionBeforeChangeHook } from 'payload'
 import delay from '../lib/delay'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
-import Mux from '@mux/mux-node'
 
 const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
-  return async ({ req, data: incomingData, operation, originalDoc }) => {
+  return async ({ req, data: incomingData, originalDoc, context }) => {
     let data = { ...incomingData }
+    const skipMuxSync = (context as any)?.skipMuxVideoBeforeChangeSync
+
     try {
-      if (!originalDoc?.assetId || originalDoc.assetId !== data.assetId) {
-        /* If this is an update, delete the old video first */
-        if (operation === 'update' && originalDoc.assetId !== data.assetId) {
-          await mux.video.assets.delete(originalDoc.assetId)
+      const assetId = data.assetId
+      const hasIncomingAsset = typeof assetId === 'string' && assetId.length > 0
+      const hasAssetChanged = hasIncomingAsset && originalDoc?.assetId !== assetId
+
+      if (!originalDoc?.assetId || hasAssetChanged) {
+        if (!hasIncomingAsset) {
+          return data
         }
 
-        /* Now, get the asset and append its' information to the doc */
-        let asset = await mux.video.assets.retrieve(data.assetId)
-        /* Poll for up to 6 seconds, then the webhook will handle setting the metadata */
-        let delayDuration = 1500
-        const pollingLimit = 6
-        const timeout = Date.now() + pollingLimit * 1000
-        while (asset.status === 'preparing') {
-          if (Date.now() > timeout) {
-            break
+        if (!skipMuxSync) {
+          /* Validate the replacement before the old asset is removed after a successful update. */
+          let asset = await mux.video.assets.retrieve(assetId)
+          /* Poll for up to 6 seconds, then the webhook will handle setting the metadata */
+          const delayDuration = 1500
+          const pollingLimit = 6
+          const timeout = Date.now() + pollingLimit * 1000
+          while (asset.status === 'preparing') {
+            if (Date.now() > timeout) {
+              break
+            }
+            await delay(delayDuration)
+            asset = await mux.video.assets.retrieve(assetId)
           }
-          await delay(delayDuration)
-          asset = await mux.video.assets.retrieve(data.assetId)
-        }
 
-        if (asset.status === 'errored') {
-          /* If the asset errored, delete it and throw an error */
-          await mux.video.assets.delete(data.assetId)
-          throw new Error(
-            `Unable to prepare asset: ${asset.status}. It's been deleted, please try again.`,
-          )
-        }
+          if (asset.status === 'errored') {
+            /* If the asset errored, delete it and throw an error */
+            await mux.video.assets.delete(assetId)
+            throw new Error(
+              `Unable to prepare asset: ${asset.status}. It's been deleted, please try again.`,
+            )
+          }
 
-        /* If the asset is ready, we can get the metadata now */
-        if (asset.status === 'ready') {
-          data = {
-            ...data,
-            ...getAssetMetadata(asset),
+          /* If the asset is ready, we can get the metadata now */
+          if (asset.status === 'ready') {
+            data = {
+              ...data,
+              ...getAssetMetadata(asset),
+            }
           }
         }
 

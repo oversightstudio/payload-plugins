@@ -1,7 +1,7 @@
-import { PayloadHandler } from 'payload'
+import type Mux from '@mux/mux-node'
+import type { PayloadHandler } from 'payload'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
-import Mux from '@mux/mux-node'
-import { MuxVideoPluginOptions } from '../types'
+import type { MuxVideoPluginOptions } from '../types'
 
 const handleAssetErrored = (req: any, assetId: string, errors: any) => {
   req.payload.logger.error(`[payload-mux] Error with assetId: ${assetId}`)
@@ -9,40 +9,70 @@ const handleAssetErrored = (req: any, assetId: string, errors: any) => {
 }
 
 const createSuccessResponse = () => new Response('Success!', { status: 200 })
-const createErrorResponse = () => new Response('Error', { status: 204 })
+const createErrorResponse = () => new Response('Error', { status: 500 })
+const mutationContext = {
+  skipMuxVideoAfterDeleteSync: true,
+  skipMuxVideoBeforeChangeSync: true,
+}
 
 export const muxWebhooksHandler =
   (mux: Mux, pluginOptions: MuxVideoPluginOptions): PayloadHandler =>
   async (req) => {
-    if (!req.json) {
-      return Response.error()
+    if (!req.text) {
+      return new Response('Invalid request', { status: 400 })
     }
 
-    const body = await req.json()
+    let event: any
 
-    if (!body) {
-      return Response.error()
+    try {
+      const rawBody = await req.text()
+      mux.webhooks.verifySignature(rawBody, req.headers)
+      event = JSON.parse(rawBody)
+    } catch (err) {
+      req.payload.logger.error('[payload-mux] Invalid Mux webhook request:')
+      req.payload.logger.error(err)
+      return new Response('Invalid Mux webhook request', { status: 400 })
     }
 
-    mux.webhooks.verifySignature(JSON.stringify(body), req.headers)
+    if (!event) {
+      return new Response('Invalid Mux webhook payload', { status: 400 })
+    }
 
     const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
 
-    const event = body
-    const assetId = event.object?.id
+    const assetId = event.object?.id ?? event.data?.id
 
-    const videos = await req.payload.find({
-      collection,
-      where: {
-        assetId: {
-          equals: assetId,
+    if (!assetId) {
+      return createSuccessResponse()
+    }
+
+    const findVideo = async () => {
+      const videos = await req.payload.find({
+        collection,
+        where: {
+          assetId: {
+            equals: assetId,
+          },
         },
-      },
-      limit: 1,
-      pagination: false,
-    })
+        limit: 1,
+        pagination: false,
+        overrideAccess: true,
+      })
 
-    const video = videos.totalDocs > 0 ? videos.docs[0] : null
+      return videos.totalDocs > 0 ? videos.docs[0] : null
+    }
+
+    const updateVideoMetadata = async (id: string | number) => {
+      return req.payload.update({
+        collection,
+        id,
+        data: getAssetMetadata(event.data),
+        overrideAccess: true,
+        context: mutationContext,
+      })
+    }
+
+    const video = await findVideo()
 
     if (!video) {
       if (
@@ -59,8 +89,26 @@ export const muxWebhooksHandler =
               assetId,
               ...getAssetMetadata(event.data),
             },
+            overrideAccess: true,
+            context: mutationContext,
           })
         } catch (err) {
+          // Mux may deliver the same event more than once. If another request
+          // created the record first, treat this delivery as successful.
+          const existingVideo = await findVideo()
+
+          if (existingVideo) {
+            if (event.type === 'video.asset.ready' || event.type === 'video.asset.updated') {
+              await updateVideoMetadata(existingVideo.id)
+            }
+
+            return createSuccessResponse()
+          }
+
+          req.payload.logger.error(
+            `[payload-mux] There was an error while creating video for asset ${assetId}:`,
+          )
+          req.payload.logger.error(err)
           return createErrorResponse()
         }
       }
@@ -72,14 +120,12 @@ export const muxWebhooksHandler =
       case 'video.asset.ready':
       case 'video.asset.updated': {
         try {
-          await req.payload.update({
-            collection,
-            id: video.id,
-            data: {
-              ...getAssetMetadata(event.data),
-            },
-          })
+          await updateVideoMetadata(video.id)
         } catch (err) {
+          req.payload.logger.error(
+            `[payload-mux] There was an error while updating video for asset ${assetId}:`,
+          )
+          req.payload.logger.error(err)
           return createErrorResponse()
         }
         break
@@ -90,8 +136,14 @@ export const muxWebhooksHandler =
           await req.payload.delete({
             collection,
             id: video.id,
+            overrideAccess: true,
+            context: mutationContext,
           })
         } catch (err) {
+          req.payload.logger.error(
+            `[payload-mux] There was an error while deleting video for asset ${assetId}:`,
+          )
+          req.payload.logger.error(err)
           return createErrorResponse()
         }
         break

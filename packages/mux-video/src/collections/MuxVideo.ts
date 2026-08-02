@@ -1,9 +1,10 @@
-import { CollectionConfig } from 'payload'
+import type Mux from '@mux/mux-node'
+import type { CollectionConfig } from 'payload'
+import getAfterChangeMuxVideoHook from '../hooks/afterChange'
 import getAfterDeleteMuxVideoHook from '../hooks/afterDelete'
 import getBeforeChangeMuxVideoHook from '../hooks/beforeChange'
-import Mux from '@mux/mux-node'
-import { MuxVideoPluginOptions } from '../types'
 import { defaultAccessFunction } from '../lib/defaultAccessFunction'
+import type { MuxVideoPluginOptions } from '../types'
 
 export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): CollectionConfig => ({
   slug: (pluginOptions.extendCollection as string) ?? 'mux-video',
@@ -19,6 +20,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
     defaultColumns: ['title', 'muxUploader', 'duration'],
   },
   hooks: {
+    afterChange: [getAfterChangeMuxVideoHook(mux)],
     afterDelete: [getAfterDeleteMuxVideoHook(mux)],
     beforeChange: [
       getBeforeChangeMuxVideoHook(mux, (pluginOptions.extendCollection as string) ?? 'mux-video'),
@@ -55,6 +57,7 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
       name: 'assetId',
       type: 'text',
       required: true,
+      unique: true,
       admin: {
         readOnly: true,
         condition: (data) => data.assetId,
@@ -214,7 +217,10 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'thumbnail',
-                    params: typeof posterTimestamp === 'number' ? { time: posterTimestamp.toString() } : undefined,
+                    params:
+                      typeof posterTimestamp === 'number'
+                        ? { time: posterTimestamp.toString() }
+                        : undefined,
                   })
 
                   url.searchParams.set('token', token)
@@ -255,7 +261,10 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'gif',
-                    params: typeof posterTimestamp === 'number' ? { time: posterTimestamp.toString() } : undefined,
+                    params:
+                      typeof posterTimestamp === 'number'
+                        ? { time: posterTimestamp.toString() }
+                        : undefined,
                   })
 
                   url.searchParams.set('token', token)
