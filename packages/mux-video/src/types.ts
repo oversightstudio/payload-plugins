@@ -122,6 +122,18 @@ export type MuxVideoPluginOptions = {
   animatedGifExtension?: 'gif' | 'webp'
 
   /**
+   * Optionally reconcile Mux assets with Payload entries in the background after initialization.
+   * - `"createMissing"`: Create Payload entries for Mux assets that are missing locally.
+   * - `"deleteStale"`: Delete Payload entries whose Mux assets no longer exist.
+   * - `"createMissingAndDeleteStale"`: Perform both operations.
+   *
+   * Delete modes only remove Payload entries; they never delete Mux assets.
+   *
+   * @default false
+   */
+  reconcileOnInit?: false | 'createMissing' | 'deleteStale' | 'createMissingAndDeleteStale'
+
+  /**
    * An optional function to determine whether the current request is allowed to upload files.
    * Should return a boolean or a Promise resolving to a boolean.
    */
