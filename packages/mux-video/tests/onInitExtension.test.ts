@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Asset } from '@mux/mux-node/resources/video/assets.mjs'
-import { onInitExtension } from '../src/lib/onInitExtension'
+import { onInitExtension, reconcileMuxVideos } from '../src/lib/onInitExtension'
 
 const makeAsset = (id: string, extra: Partial<Asset> = {}): Asset =>
   ({ id, status: 'ready', ...extra }) as Asset
@@ -25,13 +25,13 @@ const makeLogger = () => ({
   },
 })
 
-test('unset and none behaviors perform no remote or database work', async () => {
-  for (const onInitBehavior of [undefined, 'none'] as const) {
+test('unset and false reconciliation perform no remote or database work', () => {
+  for (const reconcileOnInit of [undefined, false] as const) {
     let listCalls = 0
     let findCalls = 0
-    await onInitExtension(
+    onInitExtension(
       {
-        onInitBehavior,
+        reconcileOnInit,
         uploadSettings: { cors_origin: '*' },
       },
       {
@@ -56,16 +56,60 @@ test('unset and none behaviors perform no remote or database work', async () => 
   }
 })
 
-test('createOnly consumes every listed asset and stores only plugin fields', async () => {
+test('enabled reconciliation does not block initialization', async () => {
+  let releaseList!: () => void
+  const listGate = new Promise<void>((resolve) => {
+    releaseList = resolve
+  })
+  let finishReconciliation!: () => void
+  const reconciliationFinished = new Promise<void>((resolve) => {
+    finishReconciliation = resolve
+  })
+
+  const result = onInitExtension(
+    {
+      reconcileOnInit: 'createMissing',
+      uploadSettings: { cors_origin: '*' },
+    },
+    {
+      find: async () => ({ docs: [], totalDocs: 0 }),
+      logger: {
+        error: () => undefined,
+        info: (message: string) => {
+          if (message.includes('complete')) {
+            finishReconciliation()
+          }
+        },
+      },
+    } as never,
+    {
+      video: {
+        assets: {
+          list: () => ({
+            async *[Symbol.asyncIterator]() {
+              await listGate
+            },
+          }),
+        },
+      },
+    } as never,
+  )
+
+  assert.equal(result, undefined)
+  releaseList()
+  await reconciliationFinished
+})
+
+test('createMissing consumes every listed asset and stores only plugin fields', async () => {
   const created: Record<string, unknown>[] = []
   const assets = [
     makeAsset('existing'),
     makeAsset('missing', { aspect_ratio: undefined, duration: undefined, status: 'preparing' }),
   ]
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'createOnly',
+      reconcileOnInit: 'createMissing',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -94,13 +138,13 @@ test('createOnly consumes every listed asset and stores only plugin fields', asy
   assert.deepEqual(created, [{ assetId: 'missing', title: 'Video missing' }])
 })
 
-test('deleteOnly removes stale Payload entries without deleting remote assets', async () => {
+test('deleteStale removes stale Payload entries without deleting remote assets', async () => {
   const deleted: unknown[] = []
   const retrieved: string[] = []
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'deleteOnly',
+      reconcileOnInit: 'deleteStale',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -141,9 +185,9 @@ test('deleteOnly removes stale Payload entries without deleting remote assets', 
 test('delete reconciliation keeps an entry when a fresh retrieve finds the asset', async () => {
   let deleteCalls = 0
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'createAndDelete',
+      reconcileOnInit: 'createMissingAndDeleteStale',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -170,9 +214,9 @@ test('delete reconciliation keeps an entry when Mux cannot confirm absence', asy
   let deleteCalls = 0
   const logger = makeLogger()
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'deleteOnly',
+      reconcileOnInit: 'deleteStale',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -202,9 +246,9 @@ test('simultaneous reconciliation treats an already-created entry as success', a
   let findCalls = 0
   const logger = makeLogger()
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'createOnly',
+      reconcileOnInit: 'createMissing',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -236,9 +280,9 @@ test('simultaneous reconciliation treats an already-deleted entry as success', a
   let findCalls = 0
   const logger = makeLogger()
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'deleteOnly',
+      reconcileOnInit: 'deleteStale',
       uploadSettings: { cors_origin: '*' },
     },
     {
@@ -276,9 +320,9 @@ test('a failed Mux listing performs no Payload reads or mutations', async () => 
     payloadCalls += 1
   }
 
-  await onInitExtension(
+  await reconcileMuxVideos(
     {
-      onInitBehavior: 'createAndDelete',
+      reconcileOnInit: 'createMissingAndDeleteStale',
       uploadSettings: { cors_origin: '*' },
     },
     {

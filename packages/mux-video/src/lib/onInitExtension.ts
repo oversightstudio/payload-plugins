@@ -31,22 +31,26 @@ const isNotFoundError = (err: unknown): boolean => {
   )
 }
 
-export const onInitExtension = async (
+export const reconcileMuxVideos = async (
   pluginOptions: MuxVideoPluginOptions,
   payload: Payload,
   mux: Mux,
 ): Promise<void> => {
-  const behavior = pluginOptions.onInitBehavior ?? 'none'
+  const behavior = pluginOptions.reconcileOnInit
 
-  if (behavior === 'none') {
+  if (!behavior) {
     return
   }
 
   try {
-    const shouldCreate = behavior === 'createOnly' || behavior === 'createAndDelete'
-    const shouldDelete = behavior === 'deleteOnly' || behavior === 'createAndDelete'
+    payload.logger.info(`[payload-mux] Starting background reconciliation (${behavior})...`)
+
+    const shouldCreate = behavior === 'createMissing' || behavior === 'createMissingAndDeleteStale'
+    const shouldDelete = behavior === 'deleteStale' || behavior === 'createMissingAndDeleteStale'
     const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
     const muxVideos = new Map<string, Asset>()
+    let createdCount = 0
+    let deletedCount = 0
 
     // Mux's async iterator follows every page. Complete the remote snapshot before mutating
     // Payload so a partial list can never be mistaken for deleted remote assets.
@@ -86,6 +90,7 @@ export const onInitExtension = async (
             },
             overrideAccess: true,
           })
+          createdCount += 1
         } catch (err) {
           // Multiple app replicas can reconcile simultaneously. The unique asset ID turns a
           // losing create into an expected race; only suppress it if the document now exists.
@@ -140,6 +145,7 @@ export const onInitExtension = async (
             id: video.id,
             overrideAccess: true,
           })
+          deletedCount += 1
         } catch (err) {
           // Another replica may have removed the same stale entry after our snapshot.
           const stillExists = await payload.find({
@@ -160,7 +166,23 @@ export const onInitExtension = async (
         }
       }
     }
+
+    payload.logger.info(
+      `[payload-mux] Background reconciliation complete (${createdCount} created, ${deletedCount} deleted)`,
+    )
   } catch (err: unknown) {
-    payload.logger.error({ err, msg: '[payload-mux] Error during startup reconciliation' })
+    payload.logger.error({ err, msg: '[payload-mux] Error during background reconciliation' })
   }
+}
+
+export const onInitExtension = (
+  pluginOptions: MuxVideoPluginOptions,
+  payload: Payload,
+  mux: Mux,
+): void => {
+  if (!pluginOptions.reconcileOnInit) {
+    return
+  }
+
+  void reconcileMuxVideos(pluginOptions, payload, mux)
 }
