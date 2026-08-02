@@ -32,7 +32,8 @@ export const syncMuxVideoHandler = (
         collection,
         id,
         depth: 0,
-        overrideAccess: true,
+        overrideAccess: false,
+        req: request,
       })
 
       const hasPlaybackOptions =
@@ -52,12 +53,22 @@ export const syncMuxVideoHandler = (
         return Response.json({ ready: false, status: asset.status })
       }
 
-      const updatedVideo = await request.payload.update({
+      await request.payload.update({
         collection,
         id,
         data: getAssetMetadata(asset),
         overrideAccess: true,
         context: mutationContext,
+        req: request,
+      })
+
+      // The metadata write is internal, but the response must still honor collection and field access.
+      const updatedVideo = await request.payload.findByID({
+        collection,
+        id,
+        depth: 0,
+        overrideAccess: false,
+        req: request,
       })
 
       return Response.json({
@@ -67,6 +78,12 @@ export const syncMuxVideoHandler = (
         video: updatedVideo,
       })
     } catch (err) {
+      const status = (err as { status?: number })?.status
+
+      if (status === 403 || status === 404) {
+        return new Response(status === 403 ? 'Forbidden' : 'Not Found', { status })
+      }
+
       request.payload.logger.error({
         err,
         msg: `[payload-mux] Unable to sync video ${id} with Mux`,

@@ -33,10 +33,10 @@ export const getMuxUploadHandler = (
   pluginOptions: MuxVideoPluginOptions,
 ): PayloadHandler => {
   return async (request) => {
-    const userHasAccess = pluginOptions.access?.(request) ?? defaultAccessFunction(request)
+    const userHasAccess = (await pluginOptions.access?.(request)) ?? defaultAccessFunction(request)
 
     if (!userHasAccess) {
-      return Response.error()
+      return new Response('Forbidden', { status: 403 })
     }
 
     try {

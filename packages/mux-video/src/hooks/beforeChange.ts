@@ -4,7 +4,7 @@ import delay from '../lib/delay'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 
 const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
-  return async ({ req, data: incomingData, operation, originalDoc, context }) => {
+  return async ({ req, data: incomingData, originalDoc, context }) => {
     let data = { ...incomingData }
     const skipMuxSync = (context as any)?.skipMuxVideoBeforeChangeSync
 
@@ -19,12 +19,7 @@ const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBe
         }
 
         if (!skipMuxSync) {
-          /* If this is an update, delete the old video first */
-          if (operation === 'update' && hasAssetChanged) {
-            await mux.video.assets.delete(originalDoc.assetId)
-          }
-
-          /* Now, get the asset and append its' information to the doc */
+          /* Validate the replacement before the old asset is removed after a successful update. */
           let asset = await mux.video.assets.retrieve(assetId)
           /* Poll for up to 6 seconds, then the webhook will handle setting the metadata */
           const delayDuration = 1500
