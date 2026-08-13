@@ -1,18 +1,20 @@
-import crypto from 'crypto'
-import { algorithm } from '../consts'
+import crypto from 'node:crypto'
+import { authenticatedAlgorithm, encryptedValuePrefix } from '../consts'
 
-export const createKeyFromSecret = (secretKey: string): string =>
-  crypto.createHash('sha256').update(secretKey).digest('hex').slice(0, 32)
+export const createKeyFromSecret = (secret: string): Buffer =>
+  crypto.createHash('sha256').update(secret).digest()
 
-export const encrypt = (text: string): string => {
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv(
-    algorithm,
-    createKeyFromSecret(process.env.PAYLOAD_SECRET!),
-    iv,
-  )
-
+export const encrypt = (text: string, secret: string): string => {
+  if (!secret) throw new Error('[encrypted-fields] Payload secret is required.')
+  const iv = crypto.randomBytes(12)
+  const cipher = crypto.createCipheriv(authenticatedAlgorithm, createKeyFromSecret(secret), iv)
   const encrypted = Buffer.concat([cipher.update(text), cipher.final()])
+  const authTag = cipher.getAuthTag()
 
-  return `${iv.toString('hex')}${encrypted.toString('hex')}`
+  return [
+    encryptedValuePrefix,
+    iv.toString('hex'),
+    authTag.toString('hex'),
+    encrypted.toString('hex'),
+  ].join(':')
 }

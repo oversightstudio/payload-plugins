@@ -1,16 +1,29 @@
-import type { Config } from 'payload'
+import Mux from '@mux/mux-node'
+import { deepMerge, type Config, type Plugin } from 'payload'
 import { MuxVideo } from './collections/MuxVideo'
 import { createMuxUploadHandler, getMuxUploadHandler } from './endpoints/upload'
 import { syncMuxVideoHandler } from './endpoints/sync'
 import { muxWebhooksHandler } from './endpoints/webhook'
 import { onInitExtension } from './lib/onInitExtension'
 import type { MuxVideoPluginOptions } from './types'
-import Mux from '@mux/mux-node'
-import { deepMerge } from 'payload'
 
-export const muxVideoPlugin =
-  (pluginOptions: MuxVideoPluginOptions) =>
-  (incomingConfig: Config): Config => {
+export const muxVideoPlugin = (pluginOptions: MuxVideoPluginOptions) =>
+  ((incomingConfig: Config): Config => {
+    if (pluginOptions.enabled === false) return incomingConfig
+    if (!pluginOptions.initSettings?.tokenId || !pluginOptions.initSettings?.tokenSecret) {
+      throw new Error('[payload-mux] initSettings.tokenId and tokenSecret are required.')
+    }
+    if (!pluginOptions.initSettings.webhookSecret) {
+      throw new Error('[payload-mux] initSettings.webhookSecret is required.')
+    }
+    if (!pluginOptions.uploadSettings?.cors_origin) {
+      throw new Error('[payload-mux] uploadSettings.cors_origin is required.')
+    }
+
+    const options: MuxVideoPluginOptions = {
+      ...pluginOptions,
+      adminThumbnail: pluginOptions.adminThumbnail ?? 'gif',
+    }
     const config = { ...incomingConfig }
 
     config.admin = {
@@ -20,29 +33,21 @@ export const muxVideoPlugin =
       },
     }
 
-    if (pluginOptions.enabled === false) {
-      return config
-    }
+    const mux = new Mux(options.initSettings)
 
-    if (!pluginOptions.adminThumbnail) {
-      pluginOptions.adminThumbnail = 'gif'
-    }
-
-    const mux = new Mux(pluginOptions.initSettings)
-
-    if (pluginOptions.extendCollection) {
-      const collection = config.collections?.find((c) => c.slug === pluginOptions.extendCollection)
+    if (options.extendCollection) {
+      const collectionIndex =
+        config.collections?.findIndex((c) => c.slug === options.extendCollection) ?? -1
+      const collection = collectionIndex >= 0 ? config.collections?.[collectionIndex] : undefined
 
       if (!collection) {
-        throw new Error(`Collection ${pluginOptions.extendCollection} not found`)
+        throw new Error(`[payload-mux] Collection ${String(options.extendCollection)} not found.`)
       }
 
-      config.collections = [
-        ...(config.collections.filter((c) => c.slug !== pluginOptions.extendCollection) || []),
-        deepMerge(MuxVideo(mux, pluginOptions), collection),
-      ]
+      config.collections = [...(config.collections ?? [])]
+      config.collections[collectionIndex] = deepMerge(MuxVideo(mux, options), collection)
     } else {
-      config.collections = [...(config.collections || []), MuxVideo(mux, pluginOptions)]
+      config.collections = [...(config.collections || []), MuxVideo(mux, options)]
     }
 
     config.endpoints = [
@@ -50,22 +55,22 @@ export const muxVideoPlugin =
       {
         method: 'post',
         path: '/mux/upload',
-        handler: createMuxUploadHandler(mux, pluginOptions),
+        handler: createMuxUploadHandler(mux, options),
       },
       {
         method: 'get',
         path: '/mux/upload',
-        handler: getMuxUploadHandler(mux, pluginOptions),
+        handler: getMuxUploadHandler(mux, options),
       },
       {
         method: 'post',
         path: '/mux/sync',
-        handler: syncMuxVideoHandler(mux, pluginOptions),
+        handler: syncMuxVideoHandler(mux, options),
       },
       {
         path: '/mux/webhook',
         method: 'post',
-        handler: muxWebhooksHandler(mux, pluginOptions),
+        handler: muxWebhooksHandler(mux, options),
       },
     ]
 
@@ -80,8 +85,8 @@ export const muxVideoPlugin =
         await incomingConfig.onInit(payload)
       }
 
-      onInitExtension(pluginOptions, payload, mux)
+      onInitExtension(options, payload, mux)
     }
 
     return config
-  }
+  }) satisfies Plugin

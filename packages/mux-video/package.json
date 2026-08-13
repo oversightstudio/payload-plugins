@@ -23,7 +23,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": {
@@ -36,36 +37,36 @@
     }
   },
   "devDependencies": {
-    "@mux/mux-player-react": "^3.4.1",
-    "@payloadcms/ui": "^3.43.0",
-    "@types/react": "^19.1.8",
+    "@mux/mux-player-react": "3.13.2",
+    "@payloadcms/ui": "3.88.0",
+    "@types/react": "19.2.14",
     "esbuild-plugin-preserve-directives": "^0.0.11",
-    "payload": "^3.43.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "tsup": "^8.3.6",
-    "tsx": "^4.21.0",
-    "typescript": "^5.8.3"
+    "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
   },
   "peerDependencies": {
-    "@mux/mux-player-react": "^3.4.1",
-    "@payloadcms/ui": "^3.43.0",
-    "payload": "^3.43.0"
+    "@mux/mux-player-react": ">=3.4.1 <4",
+    "@payloadcms/ui": ">=3.79.1 <4",
+    "payload": ">=3.79.1 <4"
   },
   "dependencies": {
-    "@mux/mux-node": "^11.1.0",
-    "@mux/mux-uploader-react": "^1.2.0"
+    "@mux/mux-node": "15.0.0",
+    "@mux/mux-uploader-react": "1.5.0"
   },
   "publishConfig": {
     "exports": {
       ".": {
         "import": "./dist/index.js",
-        "require": "./dist/index.js",
+        "require": "./dist/index.cjs",
         "types": "./dist/index.d.ts"
       },
       "./elements": {
         "import": "./dist/fields/index.js",
-        "require": "./dist/fields/index.js",
+        "require": "./dist/fields/index.cjs",
         "types": "./dist/fields/index.d.ts"
       }
     },

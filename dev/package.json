@@ -1,7 +1,7 @@
 {
   "name": "dev",
   "version": "1.0.16",
-  "description": "A blank template to get started with Payload 3.0",
+  "description": "Development and integration-test application for Oversight Payload plugins.",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -10,34 +10,36 @@
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "lint": "eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@oversightstudio/blur-data-urls": "workspace:*",
+    "@oversightstudio/content-guard": "workspace:*",
     "@oversightstudio/encrypted-fields": "workspace:*",
     "@oversightstudio/mux-video": "workspace:*",
-    "@payloadcms/db-sqlite": "^3.77.0",
-    "@payloadcms/next": "^3.77.0",
-    "@payloadcms/richtext-lexical": "^3.77.0",
-    "@payloadcms/ui": "^3.77.0",
-    "cross-env": "^7.0.3",
-    "graphql": "^16.12.0",
-    "payload": "^3.77.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "sharp": "0.34.2"
+    "@payloadcms/db-sqlite": "3.88.0",
+    "@payloadcms/next": "3.88.0",
+    "@payloadcms/richtext-lexical": "3.88.0",
+    "@payloadcms/ui": "3.88.0",
+    "cross-env": "10.1.0",
+    "graphql": "16.14.2",
+    "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@types/node": "^24.0.3",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6",
-    "eslint": "^9.29.0",
-    "eslint-config-next": "15.4.11",
-    "next": "15.4.11",
-    "typescript": "5.8.3"
+    "@eslint/eslintrc": "3.3.5",
+    "@types/node": "25.6.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.0",
+    "next": "16.3.0",
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0"

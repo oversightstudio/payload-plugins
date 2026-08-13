@@ -1,4 +1,4 @@
-import { PayloadRequest } from 'payload'
+import type { PayloadRequest } from 'payload'
 
 export const defaultAccessFunction = (request: PayloadRequest) => {
   if (!request.user || request.user?.collection !== request.payload.config.admin.user) {

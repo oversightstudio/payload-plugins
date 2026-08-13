@@ -22,7 +22,9 @@
     "payloadcms"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": {
@@ -31,20 +33,21 @@
     }
   },
   "devDependencies": {
-    "@payloadcms/ui": "^3.43.0",
-    "payload": "^3.43.0",
-    "tsup": "^8.3.6",
-    "typescript": "5.8.3"
+    "@payloadcms/ui": "3.88.0",
+    "payload": "3.88.0",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
   },
   "peerDependencies": {
-    "@payloadcms/ui": "^3.43.0",
-    "payload": "^3.43.0"
+    "@payloadcms/ui": ">=3.79.1 <4",
+    "payload": ">=3.79.1 <4"
   },
   "publishConfig": {
     "exports": {
       ".": {
         "import": "./dist/index.js",
-        "require": "./dist/index.js",
+        "require": "./dist/index.cjs",
         "types": "./dist/index.d.ts"
       }
     },

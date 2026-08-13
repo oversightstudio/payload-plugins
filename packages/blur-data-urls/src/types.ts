@@ -12,7 +12,7 @@ export type BlurDataUrlsPluginOptions = {
   /**
    * Determines whether the Blur Data URLs plugin is enabled.
    */
-  enabled: boolean
+  enabled?: boolean
 
   /**
    * A list of collections where the blurDataUrl field should be added.

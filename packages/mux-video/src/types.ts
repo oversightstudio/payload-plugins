@@ -154,3 +154,6 @@ export type MuxVideoPluginOptions = {
    */
   autoCreateOnWebhook?: boolean
 }
+
+export type MuxVideoRuntimeOptions = Partial<MuxVideoPluginOptions> &
+  Pick<MuxVideoPluginOptions, 'uploadSettings'>

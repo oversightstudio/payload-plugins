@@ -84,8 +84,8 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
         condition: (data) => data.duration,
         step: 0.25,
       },
-      validate: (value: any, { siblingData }: any) => {
-        if (!siblingData.duration || !value) {
+      validate: (value: unknown, { siblingData }: { siblingData: Record<string, unknown> }) => {
+        if (typeof siblingData.duration !== 'number' || typeof value !== 'number') {
           return true
         }
 

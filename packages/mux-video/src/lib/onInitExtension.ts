@@ -1,7 +1,7 @@
 import type Mux from '@mux/mux-node'
 import type { Asset } from '@mux/mux-node/resources/video/assets.mjs'
 import type { Payload } from 'payload'
-import type { MuxVideoPluginOptions } from '../types'
+import type { MuxVideoRuntimeOptions } from '../types'
 import { getAssetMetadata } from './getAssetMetadata'
 
 const createReconciliationContext = {
@@ -10,6 +10,11 @@ const createReconciliationContext = {
 
 const deleteReconciliationContext = {
   skipMuxVideoAfterDeleteSync: true,
+}
+
+type MuxVideoDocument = Record<string, unknown> & {
+  assetId?: string
+  id: number | string
 }
 
 const isNotFoundError = (err: unknown): boolean => {
@@ -32,7 +37,7 @@ const isNotFoundError = (err: unknown): boolean => {
 }
 
 export const reconcileMuxVideos = async (
-  pluginOptions: MuxVideoPluginOptions,
+  pluginOptions: MuxVideoRuntimeOptions,
   payload: Payload,
   mux: Mux,
 ): Promise<void> => {
@@ -58,12 +63,12 @@ export const reconcileMuxVideos = async (
       muxVideos.set(video.id, video)
     }
 
-    const existingVideos = await payload.find({
+    const existingVideos = (await payload.find({
       collection,
       depth: 0,
       overrideAccess: true,
       pagination: false,
-    })
+    } as never)) as unknown as { docs: MuxVideoDocument[] }
     const existingAssetIds = new Set(
       existingVideos.docs
         .map((video) => video.assetId)
@@ -89,7 +94,7 @@ export const reconcileMuxVideos = async (
               ...getAssetMetadata(video),
             },
             overrideAccess: true,
-          })
+          } as never)
           createdCount += 1
         } catch (err) {
           // Multiple app replicas can reconcile simultaneously. The unique asset ID turns a
@@ -104,7 +109,7 @@ export const reconcileMuxVideos = async (
                 equals: video.id,
               },
             },
-          })
+          } as never)
 
           if (concurrentlyCreated.totalDocs === 0) {
             throw err
@@ -144,7 +149,7 @@ export const reconcileMuxVideos = async (
             context: deleteReconciliationContext,
             id: video.id,
             overrideAccess: true,
-          })
+          } as never)
           deletedCount += 1
         } catch (err) {
           // Another replica may have removed the same stale entry after our snapshot.
@@ -158,7 +163,7 @@ export const reconcileMuxVideos = async (
                 equals: video.id,
               },
             },
-          })
+          } as never)
 
           if (stillExists.totalDocs > 0) {
             throw err
@@ -176,7 +181,7 @@ export const reconcileMuxVideos = async (
 }
 
 export const onInitExtension = (
-  pluginOptions: MuxVideoPluginOptions,
+  pluginOptions: MuxVideoRuntimeOptions,
   payload: Payload,
   mux: Mux,
 ): void => {

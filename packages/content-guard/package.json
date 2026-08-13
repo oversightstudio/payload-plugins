@@ -1,0 +1,71 @@
+{
+  "name": "@oversightstudio/content-guard",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A headless password wall for Payload and Next.js.",
+  "private": false,
+  "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
+  "repository": "https://github.com/oversightstudio/payload-plugins/tree/main/packages/content-guard",
+  "license": "MIT",
+  "author": "oversightstudio",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "payload",
+    "cms",
+    "plugin",
+    "password",
+    "content-guard",
+    "staging"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./next": {
+      "import": "./src/next/index.ts",
+      "types": "./src/next/index.ts"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "esbuild-plugin-preserve-directives": "0.0.11",
+    "next": "16.3.0",
+    "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
+  },
+  "peerDependencies": {
+    "next": ">=15.5.16 <17",
+    "payload": ">=3.79.1 <4",
+    "react": ">=19 <20",
+    "react-dom": ">=19 <20"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs",
+        "types": "./dist/index.d.ts"
+      },
+      "./next": {
+        "import": "./dist/next/index.js",
+        "require": "./dist/next/index.cjs",
+        "types": "./dist/next/index.d.ts"
+      }
+    },
+    "main": "./dist/index.js",
+    "registry": "https://registry.npmjs.org/",
+    "types": "./dist/index.d.ts"
+  }
+}

@@ -1,12 +1,13 @@
 import type Mux from '@mux/mux-node'
-import type { CollectionBeforeChangeHook } from 'payload'
+import type { CollectionBeforeChangeHook, Where } from 'payload'
 import delay from '../lib/delay'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
 
 const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBeforeChangeHook => {
   return async ({ req, data: incomingData, originalDoc, context }) => {
     let data = { ...incomingData }
-    const skipMuxSync = (context as any)?.skipMuxVideoBeforeChangeSync
+    const skipMuxSync = (context as { skipMuxVideoBeforeChangeSync?: boolean } | undefined)
+      ?.skipMuxVideoBeforeChangeSync
 
     try {
       const assetId = data.assetId
@@ -54,16 +55,26 @@ const getBeforeChangeMuxVideoHook = (mux: Mux, collection: string): CollectionBe
         data.url = ''
 
         /* Ensure the title is unique, since we're setting the filename equal to the title and the filename must be unique */
-        const existingVideo = await req.payload.find({
-          collection,
-          where: {
-            title: {
-              contains: data.title,
-            },
-          },
-        })
-
-        const uniqueTitle = `${data.title}${existingVideo.totalDocs > 0 ? ` (${existingVideo.totalDocs})` : ''}`
+        const baseTitle =
+          typeof data.title === 'string' && data.title.trim() ? data.title.trim() : assetId
+        let uniqueTitle = baseTitle
+        let suffix = 1
+        while (suffix < 10_000) {
+          const clauses: Where[] = [{ title: { equals: uniqueTitle } }]
+          if (originalDoc?.id) clauses.push({ id: { not_equals: originalDoc.id } })
+          const existingVideo = await req.payload.find({
+            collection,
+            depth: 0,
+            limit: 1,
+            overrideAccess: true,
+            req,
+            where: { and: clauses },
+          } as never)
+          if (existingVideo.totalDocs === 0) break
+          uniqueTitle = `${baseTitle} (${suffix})`
+          suffix += 1
+        }
+        if (suffix >= 10_000) throw new Error('[payload-mux] Unable to allocate a unique title.')
         data.title = uniqueTitle
         data.filename = uniqueTitle
       }

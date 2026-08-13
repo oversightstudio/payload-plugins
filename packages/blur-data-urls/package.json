@@ -22,7 +22,9 @@
     "urls"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": {
@@ -31,20 +33,21 @@
     }
   },
   "devDependencies": {
-    "payload": "^3.43.0",
-    "sharp": "0.34.2",
-    "tsup": "^8.3.6",
-    "typescript": "5.8.3"
+    "payload": "3.88.0",
+    "sharp": "0.35.3",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
   },
   "peerDependencies": {
-    "payload": "^3.43.0",
-    "sharp": "^0.34.2"
+    "payload": ">=3.79.1 <4",
+    "sharp": ">=0.34.2 <0.36"
   },
   "publishConfig": {
     "exports": {
       ".": {
         "import": "./dist/index.js",
-        "require": "./dist/index.js",
+        "require": "./dist/index.cjs",
         "types": "./dist/index.d.ts"
       }
     },

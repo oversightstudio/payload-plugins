@@ -2,15 +2,21 @@ import type Mux from '@mux/mux-node'
 import type { PayloadHandler } from 'payload'
 import { defaultAccessFunction } from '../lib/defaultAccessFunction'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
-import type { MuxVideoPluginOptions } from '../types'
+import type { MuxVideoRuntimeOptions } from '../types'
 
 const mutationContext = {
   skipMuxVideoBeforeChangeSync: true,
 }
 
+type MuxVideoDocument = Record<string, unknown> & {
+  assetId?: string
+  id: number | string
+  playbackOptions?: unknown[]
+}
+
 export const syncMuxVideoHandler = (
   mux: Mux,
-  pluginOptions: MuxVideoPluginOptions,
+  pluginOptions: MuxVideoRuntimeOptions,
 ): PayloadHandler => {
   return async (request) => {
     const userHasAccess = (await pluginOptions.access?.(request)) ?? defaultAccessFunction(request)
@@ -19,22 +25,22 @@ export const syncMuxVideoHandler = (
       return new Response('Forbidden', { status: 403 })
     }
 
-    const id = request.query.id as string | undefined
+    const id = request.query.id
 
-    if (!id) {
-      return new Response('Missing video ID', { status: 400 })
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,200}$/.test(id)) {
+      return new Response('Missing or invalid video ID', { status: 400 })
     }
 
     const collection = (pluginOptions.extendCollection as string) ?? 'mux-video'
 
     try {
-      const video = await request.payload.findByID({
+      const video = (await request.payload.findByID({
         collection,
         id,
         depth: 0,
         overrideAccess: false,
         req: request,
-      })
+      } as never)) as unknown as MuxVideoDocument
 
       const hasPlaybackOptions =
         Array.isArray(video?.playbackOptions) && video.playbackOptions.length > 0
@@ -60,16 +66,16 @@ export const syncMuxVideoHandler = (
         overrideAccess: true,
         context: mutationContext,
         req: request,
-      })
+      } as never)
 
       // The metadata write is internal, but the response must still honor collection and field access.
-      const updatedVideo = await request.payload.findByID({
+      const updatedVideo = (await request.payload.findByID({
         collection,
         id,
         depth: 0,
         overrideAccess: false,
         req: request,
-      })
+      } as never)) as unknown as MuxVideoDocument
 
       return Response.json({
         ready:

@@ -1,26 +1,105 @@
 name: CI
 
 on:
+  pull_request:
   push:
-    branches:
-      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  changes:
     runs-on: ubuntu-latest
-    concurrency:
-      group: build
-      cancel-in-progress: true # Cancel any in-progress builds if a new one starts
-
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      dev: ${{ steps.filter.outputs.dev }}
+      blur: ${{ steps.filter.outputs.blur }}
+      guard: ${{ steps.filter.outputs.guard }}
+      encrypted: ${{ steps.filter.outputs.encrypted }}
+      mux: ${{ steps.filter.outputs.mux }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          version: 9
+          filters: |
+            shared:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - '.github/**'
+            dev:
+              - 'dev/**'
+            blur:
+              - 'packages/blur-data-urls/**'
+            guard:
+              - 'packages/content-guard/**'
+            encrypted:
+              - 'packages/encrypted-fields/**'
+            mux:
+              - 'packages/mux-video/**'
+
+  blur-data-urls:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.blur == 'true'
+    uses: ./.github/workflows/package-check.yml
+    with:
+      package: '@oversightstudio/blur-data-urls'
+
+  content-guard:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.guard == 'true'
+    uses: ./.github/workflows/package-check.yml
+    with:
+      package: '@oversightstudio/content-guard'
+
+  encrypted-fields:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.encrypted == 'true'
+    uses: ./.github/workflows/package-check.yml
+    with:
+      package: '@oversightstudio/encrypted-fields'
+
+  mux-video:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.mux == 'true'
+    uses: ./.github/workflows/package-check.yml
+    with:
+      package: '@oversightstudio/mux-video'
+
+  dev:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.dev == 'true' || needs.changes.outputs.guard == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.13.0
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
-          cache: 'pnpm'
-
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter ./packages/* run build # Only build packages in /packages
+      - run: pnpm --dir dev typecheck
+
+  audit:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.13.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level=high

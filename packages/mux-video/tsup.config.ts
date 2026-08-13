@@ -11,11 +11,14 @@ export default defineConfig({
     'esbuild-plugin-preserve-directives',
   ],
   entry: ['src/index.ts', 'src/fields/index.ts'],
-  format: ['esm'],
+  format: ['esm', 'cjs'],
   dts: true,
   outDir: 'dist',
   splitting: false,
   clean: true,
+  outExtension({ format }) {
+    return { js: format === 'cjs' ? '.cjs' : '.js' }
+  },
   esbuildOptions(options) {
     options.loader = {
       '.tsx': 'tsx',

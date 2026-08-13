@@ -1,191 +1,67 @@
 # Mux Video Payload Plugin
 
 ## Install
-`pnpm add @oversightstudio/mux-video @mux/mux-player-react`
+
+```sh
+pnpm add @oversightstudio/mux-video @mux/mux-player-react
+```
 
 ## About
-This plugin brings Mux Video to Payload! It creates a “Videos” collection within the admin panel, making it simple to upload videos directly to Mux and manage them.
 
-Features include:
-- Support for both public and signed playback policies.
-- Ensures that videos deleted in the admin panel are automatically deleted from Mux, and vice versa.
-- Video gif previews on the videos collection list view, which can be disabled if required.
-
-![muxVideoPreview](/gifs/mux-preview.gif)
+This plugin adds a Payload video collection backed by Mux, direct uploads, verified webhooks, public or signed playback, admin thumbnails, and optional startup reconciliation.
 
 ## Payload Setup
-There are two possible setups for this plugin: The public setup, and the signed URLs setup. The main difference between the two is that the signed URLs setup requires setting up a little extra configuration, but that's about it.
 
-To get started, you’ll need to generate your MUX tokens and secrets from the MUX Dashboard. When configuring the webhook, set the URL to the automatically generated API endpoint provided by this plugin at `/api/mux/webhook`. If you have set a custom API route in Payload config via `routes.api`, the API endpoint will be `<your_custom_api_route>/mux/webhook`.
+Create Mux API credentials and a webhook pointing to `/api/mux/webhook` (or your custom Payload API prefix).
 
-### Public Setup
 ```tsx
-import { buildConfig } from 'payload'
 import { muxVideoPlugin } from '@oversightstudio/mux-video'
+import { buildConfig } from 'payload'
 
 export default buildConfig({
   plugins: [
     muxVideoPlugin({
       enabled: true,
       initSettings: {
-        tokenId: process.env.MUX_TOKEN_ID || '',
-        tokenSecret: process.env.MUX_TOKEN_SECRET || '',
-        webhookSecret: process.env.MUX_WEBHOOK_SIGNING_SECRET || '',
+        tokenId: process.env.MUX_TOKEN_ID!,
+        tokenSecret: process.env.MUX_TOKEN_SECRET!,
+        webhookSecret: process.env.MUX_WEBHOOK_SIGNING_SECRET!,
       },
       uploadSettings: {
-        cors_origin: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+        cors_origin: process.env.NEXT_PUBLIC_SERVER_URL!,
+        new_asset_settings: { playback_policy: ['public'] },
       },
     }),
   ],
 })
 ```
 
-
-
-### Signed URLs Setup
-```tsx
-import { buildConfig } from 'payload'
-import { muxVideoPlugin } from '@oversightstudio/mux-video'
-
-export default buildConfig({
-  plugins: [
-    muxVideoPlugin({
-      enabled: true,
-      initSettings: {
-        tokenId: process.env.MUX_TOKEN_ID || '',
-        tokenSecret: process.env.MUX_TOKEN_SECRET || '',
-        webhookSecret: process.env.MUX_WEBHOOK_SIGNING_SECRET || '',
-        jwtSigningKey: process.env.MUX_JWT_KEY_ID || '',
-        jwtPrivateKey: process.env.MUX_JWT_KEY || '',
-      },
-      uploadSettings: {
-        cors_origin: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
-        new_asset_settings: {
-          playback_policy: ['signed'],
-        },
-      },
-    }),
-  ],
-})
-```
+For signed playback, also provide `jwtSigningKey` and `jwtPrivateKey`, then use `playback_policy: ['signed']`.
 
 ## Options
 
-| Option                    | Type                                             | Default  | Description                                                                                             |
-|---------------------------|--------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------|
-| `enabled`                  | `boolean`                                        | **Required** | Whether the plugin is enabled.                                                                         |
-| `initSettings`             | `MuxVideoInitSettings`                           | **Required** | Initialization settings for the Mux implementation.                                                    |
-| `uploadSettings`           | `MuxVideoUploadSettings`                         | **Required** | Upload settings for Mux video assets.                                                                  |
-| `extendCollection`         | `string`                                         | *Optional* | The slug of an existing collection to extend with Mux video functionality. |
-| `access`                   | `(request: PayloadRequest) => Promise<boolean> \| boolean` | *Optional* | An optional function to determine who can upload files. Should return a boolean or a Promise resolving to a boolean. |
-| `signedUrlOptions`         | `MuxVideoSignedUrlOptions`                       | *Optional* | Options for signed URL generation.                                                                     |
-| `posterExtension`          | `'webp' \| 'jpg' \| 'png'`                       | `"png"`  | The image format to use for video posters. |
-| `animatedGifExtension`     | `'gif' \| 'webp'`                                | `"gif"`  | The image format to use for animated preview thumbnails. |
-| `adminThumbnail`           | `'gif' \| 'image' \| 'none'`                     | `"gif"`  | Specifies the type of thumbnail to display for videos in the collection list view. |
-| `reconcileOnInit`          | `false \| "createMissing" \| "deleteStale" \| "createMissingAndDeleteStale"` | `false` | Reconcile Payload entries with all Mux assets in the background after startup. Delete modes remove stale Payload entries only; they never delete Mux assets. |
-| `autoCreateOnWebhook`    | `boolean`                                        | `false`  | If enabled, the Mux webhook will automatically create videos that are missing in Payload when webhooks are received from Mux. Useful for uploading videos directly in Mux and automatically backfilling them in Payload. |
+| Option                 | Type                         | Default                | Description                                                    |
+| ---------------------- | ---------------------------- | ---------------------- | -------------------------------------------------------------- |
+| `enabled`              | `boolean`                    | Required               | Enable the plugin. `false` is an exact no-op.                  |
+| `initSettings`         | `MuxVideoInitSettings`       | Required               | Mux API, webhook, and optional signing credentials.            |
+| `uploadSettings`       | `MuxVideoUploadSettings`     | Required               | Direct upload settings, including an exact CORS origin.        |
+| `extendCollection`     | `string`                     | —                      | Extend an existing collection instead of creating `mux-video`. |
+| `access`               | `function`                   | Authenticated users    | Decide who can upload.                                         |
+| `signedUrlOptions`     | `object`                     | `{ expiration: '1d' }` | Configure signed playback URLs.                                |
+| `posterExtension`      | `'webp' \| 'jpg' \| 'png'`   | `'png'`                | Poster format.                                                 |
+| `animatedGifExtension` | `'gif' \| 'webp'`            | `'gif'`                | Animated preview format.                                       |
+| `adminThumbnail`       | `'gif' \| 'image' \| 'none'` | `'gif'`                | Collection-list thumbnail type.                                |
+| `reconcileOnInit`      | reconciliation mode          | `false`                | Reconcile Payload records with Mux at startup.                 |
+| `autoCreateOnWebhook`  | `boolean`                    | `false`                | Create missing Payload records from verified Mux events.       |
 
+## Collection and Frontend Usage
 
-### `initSettings` Options 
+Relate other documents to the generated `mux-video` collection, then pass its playback ID or URL to Mux Player.
 
-| Option                | Type        | Default  | Description                                               |
-|-----------------------|-------------|----------|-----------------------------------------------------------|
-| `tokenId`             | `string`    | **Required** | The Mux token ID.                                        |
-| `tokenSecret`         | `string`    | **Required** | The Mux token secret.                                    |
-| `webhookSecret`       | `string`    | **Required** | The secret used to validate Mux webhooks.                |
-| `jwtSigningKey`       | `string`    | *Optional* | Optional JWT signing key, required for signed URL setup. |
-| `jwtPrivateKey`       | `string`    | *Optional* | Optional JWT private key, required for signed URL setup. |
-
-
-### `uploadSettings` Options
-
-| Option                    | Type                  | Default  | Description                                            |
-|---------------------------|-----------------------|----------|--------------------------------------------------------|
-| `cors_origin`              | `string`              | **Required** | The required CORS origin for Mux.                       |
-| `new_asset_settings`      | `MuxVideoNewAssetSettings` | *Optional* | Additional settings for creating assets in Mux. |
-
-### `new_asset_settings` Options
-
-| Option                        | Type                        | Default  | Description                                                 |
-|-------------------------------|-----------------------------|----------|-------------------------------------------------------------|
-| `playback_policy`              | `Array<'public' | 'signed'>`  | `public` | Controls the playback policy for uploaded videos. Default is `public`. |
-
-### `signedUrlOptions` Options
-
-| Option                        | Type        | Default  | Description                                                 |
-|-------------------------------|-------------|----------|-------------------------------------------------------------|
-| `expiration`                  | `string`    | `"1d"`   | Expiration time for signed URLs. Default is `"1d"`.          |
-
-## Videos Collection
-This is the collection generated by the plugin with the `mux-video` slug. 
-
-| Field              | Type       | Read-Only | Description |
-|-------------------|-----------|-----------|-------------|
-| `title`          | `text`    | No        | A unique title for this video that will help you identify it later. |
-| `assetId`        | `text`    | Yes       | |
-| `duration`       | `number`  | Yes       | |
-| `posterTimestamp`| `number`  | No        | A timestamp (in seconds) from the video to be used as the poster image. When unset, defaults to the middle of the video. |
-| `aspectRatio`    | `text`    | Yes       | |
-| `maxWidth`       | `number`  | Yes       | |
-| `maxHeight`      | `number`  | Yes       | |
-| `playbackOptions`| `array`   | Yes       | |
-
-### `playbackOptions` Fields
-
-| Field           | Type     | Read-Only | Description |
-|---------------|---------|-----------|-------------|
-| `playbackId`  | `text`  | Yes       | |
-| `playbackPolicy` | `select` | Yes       | Options: `signed`, `public` |
-| `playbackUrl` | `text (virtual)` | Yes | |
-| `posterUrl`   | `text (virtual)` | Yes | |
-
-## Payload Usage Example
 ```tsx
-import { CollectionConfig } from 'payload'
-
-export const ExampleCollection: CollectionConfig = {
-  slug: 'example',
-  fields: [
-    // To link videos to other collection, use the `relationship` field type
-    {
-      name: 'video',
-      label: 'Preview Video',
-      type: 'relationship',
-      relationTo: 'mux-video',
-    },
-  ],
-}
-```
-
-## Frontend Usage Example
-```tsx
-import config from '@/payload.config'
-import { getPayload } from 'payload'
 import MuxPlayer from '@mux/mux-player-react'
 
-async function Page() {
-  const payload = await getPayload({ config })
-
-  const video = await payload.findByID({
-    collection: 'mux-video',
-    id: 'example',
-  })
-
-  return (
-    <MuxPlayer
-      // Using playback id
-      playbackId={video.playbackOptions![0].playbackId!}
-      // Or use the playback URL
-      src={video.playbackOptions![0].playbackUrl!}
-      // Poster
-      poster={video.playbackOptions![0].posterUrl!}
-    />
-  )
-}
-
-export default Page
+;<MuxPlayer playbackId={video.playbackOptions?.[0]?.playbackId} />
 ```
 
-## Credits
-* Huge shoutout to [jamesvclements](https://github.com/jamesvclements) for building the initial version of this plugin!
-* Shoutout to [Paul](https://github.com/paulpopus) for being a real one.
+Deleting a Payload video also deletes its Mux asset. Webhook payloads are signature-verified and size-limited; keep the signing secret private and restrict write access appropriately.

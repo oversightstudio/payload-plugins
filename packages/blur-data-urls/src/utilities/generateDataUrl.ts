@@ -27,7 +27,11 @@ export const generateDataUrl = async (
       resizedHeight = 32
     }
 
-    const blurDataBuffer = await sharpImage.resize(width, resizedHeight).blur(blur).toBuffer()
+    const blurDataBuffer = await sharpImage
+      .resize(width, resizedHeight, { fit: 'fill' })
+      .blur(blur)
+      .png()
+      .toBuffer()
 
     const blurDataURL = `data:image/png;base64,${blurDataBuffer.toString('base64')}`
 

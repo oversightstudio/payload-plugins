@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { blurDataUrlsPlugin } from '@oversightstudio/blur-data-urls'
+import { contentGuardPlugin } from '@oversightstudio/content-guard'
 import { muxVideoPlugin } from '@oversightstudio/mux-video'
 
 import { Users } from './collections/Users'
@@ -41,6 +42,10 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
+    contentGuardPlugin({
+      defaultActive: Boolean(process.env.CONTENT_GUARD_PASSWORD),
+      defaultPassword: process.env.CONTENT_GUARD_PASSWORD,
+    }),
     blurDataUrlsPlugin({
       enabled: true,
       collections: [Media],
@@ -51,7 +56,11 @@ export default buildConfig({
       },
     }),
     muxVideoPlugin({
-      enabled: true,
+      enabled: Boolean(
+        process.env.MUX_TOKEN_ID &&
+        process.env.MUX_TOKEN_SECRET &&
+        process.env.MUX_WEBHOOK_SIGNING_SECRET,
+      ),
       extendCollection: 'videos',
       initSettings: {
         tokenId: process.env.MUX_TOKEN_ID || '',

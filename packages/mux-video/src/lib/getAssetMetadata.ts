@@ -1,15 +1,31 @@
 import type { Asset } from '@mux/mux-node/resources/video/assets.mjs'
 
-export const getAssetMetadata = (asset: Asset) => {
-  const videoTrack = asset.tracks?.find((track: any) => track.type === 'video')
+type MuxAssetMetadata = {
+  aspectRatio?: string
+  duration?: number
+  maxHeight?: number
+  maxWidth?: number
+  playbackOptions?: Array<{
+    playbackId: string
+    playbackPolicy: 'public' | 'signed'
+  }>
+}
+
+export const getAssetMetadata = (asset: Asset): MuxAssetMetadata => {
+  const videoTrack = asset.tracks?.find((track) => track.type === 'video')
 
   return {
     ...(asset.playback_ids
       ? {
-          playbackOptions: asset.playback_ids.map((value) => ({
-            playbackId: value.id,
-            playbackPolicy: value.policy,
-          })),
+          playbackOptions: asset.playback_ids
+            .filter(
+              (value): value is typeof value & { policy: 'public' | 'signed' } =>
+                value.policy === 'public' || value.policy === 'signed',
+            )
+            .map((value) => ({
+              playbackId: value.id,
+              playbackPolicy: value.policy,
+            })),
         }
       : {}),
     /* Reformat Mux's aspect ratio (e.g. 16:9) to be CSS-friendly (e.g. 16/9) */
@@ -21,5 +37,5 @@ export const getAssetMetadata = (asset: Asset) => {
           maxHeight: videoTrack.max_height,
         }
       : {}),
-  } as any
+  }
 }

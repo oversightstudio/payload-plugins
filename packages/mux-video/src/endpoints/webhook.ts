@@ -1,9 +1,15 @@
 import type Mux from '@mux/mux-node'
-import type { PayloadHandler } from 'payload'
+import type { PayloadHandler, PayloadRequest } from 'payload'
 import { getAssetMetadata } from '../lib/getAssetMetadata'
-import type { MuxVideoPluginOptions } from '../types'
+import type { MuxVideoRuntimeOptions } from '../types'
 
-const handleAssetErrored = (req: any, assetId: string, errors: any) => {
+type MuxWebhookEvent = {
+  data?: Record<string, unknown> & { errors?: unknown; id?: string; meta?: { title?: string } }
+  object?: { id?: string }
+  type?: string
+}
+
+const handleAssetErrored = (req: PayloadRequest, assetId: string, errors: unknown) => {
   req.payload.logger.error(`[payload-mux] Error with assetId: ${assetId}`)
   req.payload.logger.error(JSON.stringify(errors, null, 2))
 }
@@ -16,25 +22,29 @@ const mutationContext = {
 }
 
 export const muxWebhooksHandler =
-  (mux: Mux, pluginOptions: MuxVideoPluginOptions): PayloadHandler =>
+  (mux: Mux, pluginOptions: MuxVideoRuntimeOptions): PayloadHandler =>
   async (req) => {
     if (!req.text) {
       return new Response('Invalid request', { status: 400 })
     }
 
-    let event: any
+    const contentLength = Number(req.headers.get('content-length') ?? 0)
+    if (contentLength > 1_048_576) return new Response('Payload too large', { status: 413 })
+
+    let event: MuxWebhookEvent
 
     try {
       const rawBody = await req.text()
+      if (rawBody.length > 1_048_576) return new Response('Payload too large', { status: 413 })
       mux.webhooks.verifySignature(rawBody, req.headers)
-      event = JSON.parse(rawBody)
+      event = JSON.parse(rawBody) as MuxWebhookEvent
     } catch (err) {
       req.payload.logger.error('[payload-mux] Invalid Mux webhook request:')
       req.payload.logger.error(err)
       return new Response('Invalid Mux webhook request', { status: 400 })
     }
 
-    if (!event) {
+    if (!event || typeof event !== 'object' || typeof event.type !== 'string') {
       return new Response('Invalid Mux webhook payload', { status: 400 })
     }
 
@@ -42,12 +52,15 @@ export const muxWebhooksHandler =
 
     const assetId = event.object?.id ?? event.data?.id
 
-    if (!assetId) {
+    if (typeof assetId !== 'string' || !assetId) {
       return createSuccessResponse()
+    }
+    if (!event.data || typeof event.data !== 'object') {
+      return new Response('Invalid Mux webhook payload', { status: 400 })
     }
 
     const findVideo = async () => {
-      const videos = await req.payload.find({
+      const videos = (await req.payload.find({
         collection,
         where: {
           assetId: {
@@ -57,7 +70,11 @@ export const muxWebhooksHandler =
         limit: 1,
         pagination: false,
         overrideAccess: true,
-      })
+        req,
+      } as never)) as unknown as {
+        docs: Array<Record<string, unknown> & { id: number | string }>
+        totalDocs: number
+      }
 
       return videos.totalDocs > 0 ? videos.docs[0] : null
     }
@@ -66,10 +83,11 @@ export const muxWebhooksHandler =
       return req.payload.update({
         collection,
         id,
-        data: getAssetMetadata(event.data),
+        data: getAssetMetadata(event.data as never),
         overrideAccess: true,
         context: mutationContext,
-      })
+        req,
+      } as never)
     }
 
     const video = await findVideo()
@@ -85,13 +103,14 @@ export const muxWebhooksHandler =
           await req.payload.create({
             collection,
             data: {
-              title: event.data.meta?.title || assetId,
+              title: event.data?.meta?.title || assetId,
               assetId,
-              ...getAssetMetadata(event.data),
+              ...getAssetMetadata(event.data as never),
             },
             overrideAccess: true,
             context: mutationContext,
-          })
+            req,
+          } as never)
         } catch (err) {
           // Mux may deliver the same event more than once. If another request
           // created the record first, treat this delivery as successful.
@@ -138,7 +157,8 @@ export const muxWebhooksHandler =
             id: video.id,
             overrideAccess: true,
             context: mutationContext,
-          })
+            req,
+          } as never)
         } catch (err) {
           req.payload.logger.error(
             `[payload-mux] There was an error while deleting video for asset ${assetId}:`,
