@@ -43,7 +43,9 @@ The plugin uses the configured Payload secret for cookie signing by default, so 
 
 ## Frontend Setup
 
-Wrap only the server-rendered routes you want to protect. The recommended setup binds your Payload config and branded password gate once in a project-level component.
+Wrap any route or layout you want to protect. Wrapping a layout protects every route below it, so you can guard a single page, a section of the site, or the entire site from the root layout. The recommended setup binds your Payload config and branded password gate once in a project-level component.
+
+Anything wrapped by `ContentGuard` becomes dynamically server-rendered because the guard must read Payload settings, request headers, and cookies for each request. This is also true while the CMS `Active` toggle is off. If a deployment must remain statically rendered, set the plugin's code-level `enabled` option to `false`.
 
 ### 1. Create Your Site Guard
 
@@ -112,7 +114,9 @@ Omit `passwordGate` to render no visible content for blocked visitors. This is u
 
 ## Rendering Behavior
 
-Wrapping a route with `ContentGuard` makes that route dynamic because it reads Payload settings, request headers, and cookies on the server. This remains true when the CMS `Active` toggle is off because Next.js determines rendering behavior at build time.
+Wrapping a page with `ContentGuard` makes that page dynamic. Wrapping a layout makes every route below that layout dynamic. The guard reads Payload settings, request headers, and cookies on the server for each request, so Next.js cannot statically render anything inside that boundary.
+
+The CMS `Active` toggle controls whether visitors are currently blocked; it does not restore static rendering when switched off. Next.js determines the route's rendering behavior from the code used by the route.
 
 Set `enabled: false` in the Payload plugin configuration when a deployment should remain fully static. This makes the plugin an exact no-op; removing only the frontend wrapper is not required.
 
