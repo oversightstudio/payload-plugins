@@ -11,7 +11,7 @@ import { ContentGuardProvider } from './ContentGuardProvider'
 
 export type ContentGuardProps = {
   children: React.ReactNode
-  passwordGate: React.ReactNode
+  passwordGate?: React.ReactNode
   payloadConfig: Promise<SanitizedConfig> | SanitizedConfig
 }
 
@@ -61,6 +61,8 @@ export async function ContentGuard({ children, passwordGate, payloadConfig }: Co
         {children}
       </>
     )
+
+  if (passwordGate == null) return <>{robots}</>
 
   const apiRoute = payload.config.routes.api.replace(/\/$/, '')
   return (

@@ -43,25 +43,14 @@ The plugin uses the configured Payload secret for cookie signing by default, so 
 
 ## Frontend Setup
 
-Wrap only the server-rendered routes you want to protect. When access is denied, `ContentGuard` renders the `passwordGate` component you provide instead of the protected children.
+Wrap only the server-rendered routes you want to protect. The recommended setup binds your Payload config and branded password gate once in a project-level component.
+
+### 1. Create Your Site Guard
+
+The password gate is a client component because it handles form state and submits the password:
 
 ```tsx
-import config from '@payload-config'
-import { ContentGuard } from '@oversightstudio/content-guard/next'
-import { PasswordGate } from './PasswordGate'
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <ContentGuard payloadConfig={config} passwordGate={<PasswordGate />}>
-      {children}
-    </ContentGuard>
-  )
-}
-```
-
-`ContentGuard` places your gate inside its client provider. Use `useContentGuard()` inside that custom gate to submit a password and display the current request state:
-
-```tsx
+// components/PasswordGate.tsx
 'use client'
 
 import { useContentGuard } from '@oversightstudio/content-guard/next'
@@ -79,7 +68,47 @@ export function PasswordGate() {
 }
 ```
 
-You own the gate's markup, accessibility, messaging, branding, and styling. To show a private "no access" screen instead, pass a static component that does not call `useContentGuard()`.
+The site guard is a server component that binds the Payload config and your gate. Keeping it separate from the client component ensures the Payload config never enters the browser bundle:
+
+```tsx
+// components/SiteContentGuard.tsx
+import config from '@payload-config'
+import { ContentGuard } from '@oversightstudio/content-guard/next'
+import { PasswordGate } from './PasswordGate'
+
+export function SiteContentGuard({ children }: { children: React.ReactNode }) {
+  return (
+    <ContentGuard payloadConfig={config} passwordGate={<PasswordGate />}>
+      {children}
+    </ContentGuard>
+  )
+}
+```
+
+`ContentGuard` places your gate inside its client provider. You own the gate's markup, accessibility, messaging, branding, and styling.
+
+### 2. Use It
+
+Wrap a layout or server-rendered page. Nothing else needs to know about the Payload config or password gate:
+
+```tsx
+// app/(frontend)/layout.tsx
+import { SiteContentGuard } from '@/components/SiteContentGuard'
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <SiteContentGuard>{children}</SiteContentGuard>
+}
+```
+
+To show a branded "no access" screen instead, replace `PasswordGate` in `SiteContentGuard` with a static component that does not call `useContentGuard()`.
+
+Omit `passwordGate` to render no visible content for blocked visitors. This is useful for admin-only interface elements when the guard is active and has a password; authenticated Payload admins still see the children through the default admin bypass:
+
+```tsx
+<ContentGuard payloadConfig={config}>
+  <AdminBar />
+</ContentGuard>
+```
 
 ## Rendering Behavior
 
