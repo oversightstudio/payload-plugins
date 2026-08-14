@@ -44,7 +44,7 @@ blurDataUrlsPlugin({
 })
 ```
 
-## Frontend Usage
+## Placeholder Styles
 
 ### Blurred Placeholders
 
