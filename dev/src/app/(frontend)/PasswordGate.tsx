@@ -1,6 +1,6 @@
 'use client'
 
-import { useContentGuard } from '@oversightstudio/content-guard/next'
+import { useContentGuard } from '@oversightstudio/content-guard/client'
 import { useState } from 'react'
 
 /** Test-harness UI only. The published package deliberately ships no password-card UI. */

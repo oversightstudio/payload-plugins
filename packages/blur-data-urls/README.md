@@ -8,12 +8,12 @@ pnpm add @oversightstudio/blur-data-urls sharp
 
 ## About
 
-This headless Payload plugin generates tiny inline image placeholders whenever an image is uploaded. It adds one hidden text field to each selected upload collection, requires no collection or route of its own, and ships no frontend UI or styling.
+This headless Payload plugin generates tiny inline image placeholders whenever an image is uploaded. It adds one hidden text field to each selected upload collection and requires no collection or route of its own. An optional, unstyled Next.js image component is available from a separate `/next` export.
 
 Two placeholder styles are available:
 
 - `blur` is the default. It generates a small blurred PNG that works directly with Next.js `Image` using `placeholder="blur"`.
-- `pixel` generates a hard-edged nearest-neighbor WebP, inspired by pixel art. It needs a custom frontend image component so the browser does not blur the pixels.
+- `pixel` generates a hard-edged nearest-neighbor WebP, inspired by pixel art. The optional Next.js component renders it without smoothing the pixels.
 
 Both styles auto-orient photos from EXIF metadata, preserve existing collection hooks, regenerate when a file is replaced, support Payload's in-memory and temporary-file uploads, and bound generated dimensions to keep data URLs compact.
 
@@ -44,7 +44,17 @@ blurDataUrlsPlugin({
 })
 ```
 
-## Blurred Placeholders
+## Next.js Component
+
+The optional `PlaceholderImage` component is the easiest way to render either style. Importing it from `/next` keeps React and Next.js out of the core server plugin:
+
+```tsx
+import { PlaceholderImage } from '@oversightstudio/blur-data-urls/next'
+```
+
+It accepts standard Next.js `Image` props, uses Next's native placeholder behavior for blur mode, and uses a hard-edged overlay for pixel mode. When no data URL exists, it behaves like a regular Next.js `Image`.
+
+### Blurred Placeholders
 
 The defaults are designed to work without additional configuration. Override them only when the project needs a different result:
 
@@ -60,18 +70,13 @@ blurDataUrlsPlugin({
 })
 ```
 
-Use the generated value directly with Next.js `Image`:
+Blur is the component's default placeholder type:
 
 ```tsx
-<Image
-  src={image.url}
-  alt={image.alt}
-  placeholder={image.blurDataUrl ? 'blur' : 'empty'}
-  blurDataURL={image.blurDataUrl ?? undefined}
-/>
+<PlaceholderImage src={image.url} alt={image.alt} placeholderDataURL={image.blurDataUrl} />
 ```
 
-## Pixelated Placeholders
+### Pixelated Placeholders
 
 Enable hard-edged pixelated placeholders with `type: 'pixel'`:
 
@@ -86,7 +91,59 @@ blurDataUrlsPlugin({
 })
 ```
 
-Next.js applies its own blur filter when `placeholder="blur"` is used, which would smooth out the hard pixel edges. Render the data URL yourself with `image-rendering: pixelated` instead. The package remains headless, so copy and brand a component like this in the application:
+Pass the matching placeholder type to the frontend component:
+
+```tsx
+<PlaceholderImage
+  src={image.url}
+  alt={image.alt}
+  placeholderDataURL={image.blurDataUrl}
+  placeholderType="pixel"
+  fill
+/>
+```
+
+Pixel mode layers the placeholder beneath the real image until the full image has decoded. Its parent must provide a positioned, stable-size box, as it would for a Next.js `Image` using `fill`.
+
+Customize only the temporary pixel layer when needed:
+
+```tsx
+<PlaceholderImage
+  {...imageProps}
+  placeholderDataURL={image.blurDataUrl}
+  placeholderType="pixel"
+  placeholderClassName="rounded-xl"
+  placeholderStyle={{ backgroundColor: '#111' }}
+/>
+```
+
+Component-specific props:
+
+| Prop                   | Type                | Default  | Description                                            |
+| ---------------------- | ------------------- | -------- | ------------------------------------------------------ |
+| `placeholderDataURL`   | `string \| null`    | —        | Generated value stored by the Payload plugin.          |
+| `placeholderType`      | `'blur' \| 'pixel'` | `'blur'` | Must match the server plugin's placeholder type.       |
+| `placeholderClassName` | `string`            | —        | Class name added only to the temporary pixel layer.    |
+| `placeholderStyle`     | `CSSProperties`     | —        | Inline styles added only to the temporary pixel layer. |
+
+Every other prop is passed to Next.js `Image`, except `placeholder` and `blurDataURL`, which the component manages.
+
+Pixel mode intentionally skips SVG uploads because vector artwork does not benefit from a raster pixel preview. Replacing an existing image with an SVG or non-image file clears the previous placeholder.
+
+## Build Your Own
+
+The packaged component is optional. For blurred placeholders, use the generated value directly with Next.js `Image`:
+
+```tsx
+<Image
+  src={image.url}
+  alt={image.alt}
+  placeholder={image.blurDataUrl ? 'blur' : 'empty'}
+  blurDataURL={image.blurDataUrl ?? undefined}
+/>
+```
+
+Next.js applies a blur filter when `placeholder="blur"` is used, so a pixel placeholder needs a custom layer. Copy and adapt this minimal implementation when the packaged component does not fit the project's markup or transition:
 
 ```tsx
 'use client'
@@ -103,11 +160,13 @@ export function PixelatedImage({
   alt,
   className,
   onLoad,
+  src,
   style,
   ...imageProps
 }: PixelatedImageProps) {
-  const [loaded, setLoaded] = useState(false)
-  const showPlaceholder = Boolean(placeholderDataURL && !loaded)
+  const sourceKey = typeof src === 'string' ? src : 'default' in src ? src.default.src : src.src
+  const [loadedSource, setLoadedSource] = useState<string>()
+  const showPlaceholder = Boolean(placeholderDataURL && loadedSource !== sourceKey)
 
   return (
     <>
@@ -135,23 +194,20 @@ export function PixelatedImage({
         {...imageProps}
         alt={alt}
         className={className}
-        style={{ ...style, opacity: loaded || !placeholderDataURL ? 1 : 0 }}
+        src={src}
+        style={{ ...style, opacity: showPlaceholder ? 0 : style?.opacity }}
         onLoad={(event) => {
           event.currentTarget
             .decode()
             .catch(() => undefined)
-            .finally(() => {
-              setLoaded(true)
-              onLoad?.(event)
-            })
+            .finally(() => setLoadedSource(sourceKey))
+          onLoad?.(event)
         }}
       />
     </>
   )
 }
 ```
-
-Pixel mode intentionally skips SVG uploads because vector artwork does not benefit from a raster pixel preview. Replacing an existing image with an SVG or non-image file clears the previous placeholder.
 
 ## Options
 

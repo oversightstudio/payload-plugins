@@ -1,8 +1,11 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  external: ['tsup', 'typescript'],
-  entry: ['src/index.ts'],
+  external: ['next', 'next/image.js', 'react', 'tsup', 'typescript'],
+  entry: {
+    index: 'src/index.ts',
+    'next/index': 'src/next/index.tsx',
+  },
   format: ['esm', 'cjs'],
   dts: true,
   outDir: 'dist',

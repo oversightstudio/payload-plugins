@@ -1,6 +1,6 @@
+import { PlaceholderImage } from '@oversightstudio/blur-data-urls/next'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import Image from 'next/image'
 
 async function Page() {
   const payload = await getPayload({ config })
@@ -14,14 +14,12 @@ async function Page() {
       <p>Hello world</p>
       {images.docs.map((image) => (
         <div key={image.id}>
-          <Image
-            key={image.id}
+          <PlaceholderImage
             src={image.url!}
-            placeholder="blur"
             width={image.width!}
             height={image.height!}
             alt={image.alt}
-            blurDataURL={image.blurDataUrl ?? undefined}
+            placeholderDataURL={image.blurDataUrl}
             style={{
               width: 500,
               height: 500,

@@ -32,18 +32,37 @@
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
+    },
+    "./next": {
+      "import": "./src/next/index.tsx",
+      "types": "./src/next/index.tsx"
     }
   },
   "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "next": "16.3.0",
     "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "sharp": "0.35.3",
     "tsup": "8.5.1",
     "tsx": "4.21.0",
     "typescript": "6.0.3"
   },
   "peerDependencies": {
+    "next": ">=15 <17",
     "payload": ">=3.79.1 <4",
+    "react": ">=18.2 <20",
     "sharp": ">=0.34.2 <0.36"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "exports": {
@@ -51,6 +70,11 @@
         "import": "./dist/index.js",
         "require": "./dist/index.cjs",
         "types": "./dist/index.d.ts"
+      },
+      "./next": {
+        "import": "./dist/next/index.js",
+        "require": "./dist/next/index.cjs",
+        "types": "./dist/next/index.d.ts"
       }
     },
     "main": "./dist/index.js",

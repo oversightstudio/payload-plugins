@@ -104,9 +104,24 @@ importers:
 
   packages/blur-data-urls:
     devDependencies:
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      next:
+        specifier: 16.3.0
+        version: 16.3.0(@babel/core@7.29.7)(@types/node@25.6.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.77.4)
       payload:
         specifier: 3.88.0
         version: 3.88.0(graphql@16.14.2)(typescript@6.0.3)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       sharp:
         specifier: 0.35.3
         version: 0.35.3(@types/node@25.6.2)

@@ -55,7 +55,7 @@ The password gate is a client component because it handles form state and submit
 // components/PasswordGate.tsx
 'use client'
 
-import { useContentGuard } from '@oversightstudio/content-guard/next'
+import { useContentGuard } from '@oversightstudio/content-guard/client'
 
 export function PasswordGate() {
   const { status, unlock } = useContentGuard()

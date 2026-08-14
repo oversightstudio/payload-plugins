@@ -32,6 +32,10 @@
     "./next": {
       "import": "./src/next/index.ts",
       "types": "./src/next/index.ts"
+    },
+    "./client": {
+      "import": "./src/client/index.ts",
+      "types": "./src/client/index.ts"
     }
   },
   "devDependencies": {
@@ -62,6 +66,11 @@
         "import": "./dist/next/index.js",
         "require": "./dist/next/index.cjs",
         "types": "./dist/next/index.d.ts"
+      },
+      "./client": {
+        "import": "./dist/client/index.js",
+        "require": "./dist/client/index.cjs",
+        "types": "./dist/client/index.d.ts"
       }
     },
     "main": "./dist/index.js",
