@@ -73,7 +73,7 @@ Use the generated value directly with Next.js `Image`:
 
 ## Pixelated Placeholders
 
-Enable Futhark-style pixel placeholders with `type: 'pixel'`:
+Enable hard-edged pixelated placeholders with `type: 'pixel'`:
 
 ```tsx
 blurDataUrlsPlugin({
