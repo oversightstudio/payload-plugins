@@ -2,7 +2,7 @@
   "name": "@oversightstudio/blur-data-urls",
   "type": "module",
   "version": "1.0.4",
-  "description": "Automatically assign URLs for blur data to media collections in Payload.",
+  "description": "Generate blurred or pixelated inline image placeholders for Payload upload collections.",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
   "repository": "https://github.com/oversightstudio/payload-plugins/tree/main/packages/blur-data-urls",
@@ -18,6 +18,8 @@
     "cms",
     "plugin",
     "blur",
+    "pixelated",
+    "placeholder",
     "data",
     "urls"
   ],

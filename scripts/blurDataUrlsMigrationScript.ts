@@ -1,103 +1,158 @@
 /**
- * Place this script on your ./src/scripts/ directory.
+ * Copy this file to `src/scripts/backfillImagePlaceholders.ts` in a Payload app.
+ * Run it with `tsx src/scripts/backfillImagePlaceholders.ts`.
  */
 
-import { getPayload, TypedUploadCollection } from 'payload'
+import {
+  generatePlaceholderDataUrl,
+  type PlaceholderOptions,
+} from '@oversightstudio/blur-data-urls'
+import { getPayload, type Payload } from 'payload'
 import { loadEnv } from 'payload/node'
-import type { GeneratedTypes } from 'payload'
-import sharp from 'sharp'
 
 loadEnv()
 
-/**
- * !PLUGIN CONFIGURATION!
- */
+const collections = ['media'] as const
+const fieldName = 'blurDataUrl'
+const placeholder: PlaceholderOptions = { type: 'blur' }
+const batchSize = 50
+const concurrency = 4
+const overwriteExisting = false
+const fetchAttempts = 3
 
-const mediaCollections: (keyof GeneratedTypes['collections'])[] = ['media']
+const sleep = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
 
-const blurOptions = {
-  width: 20,
-  height: 'auto',
-  blur: 18,
-}
-
-/**
- * !END OF PLUGIN CONFIGURATION!
- */
-
-export const generateDataUrl = async (buffer: ArrayBuffer): Promise<string> => {
-  try {
-    const { width, height, blur } = blurOptions
-
-    const metadata = await sharp(buffer).metadata()
-
-    let resizedHeight: number
-
-    if (height === 'auto' && metadata.width && metadata.height) {
-      resizedHeight = Math.round((width / metadata.width) * metadata.height)
-    } else if (typeof height === 'number') {
-      resizedHeight = height
-    } else {
-      resizedHeight = 32
+const mapWithConcurrency = async <T>(
+  values: T[],
+  limit: number,
+  task: (value: T) => Promise<void>,
+): Promise<void> => {
+  let index = 0
+  const worker = async () => {
+    while (index < values.length) {
+      const value = values[index]
+      index += 1
+      await task(value)
     }
-
-    const blurDataBuffer = await sharp(buffer).resize(width, resizedHeight).blur(blur).toBuffer()
-
-    const blurDataURL = `data:image/png;base64,${blurDataBuffer.toString('base64')}`
-
-    return blurDataURL
-  } catch (error) {
-    console.error('Error generating blurDataURL:', error)
-    throw error
   }
+
+  await Promise.all(Array.from({ length: Math.min(limit, values.length) }, worker))
 }
 
-async function migrateBlurDataUrls() {
-  const payload = await getPayload({
-    config: await import('../payload.config').then((m) => m.default),
-  })
+const resolveSourceURL = (url: string, payload: Payload): string => {
+  if (/^https?:\/\//i.test(url)) return url
 
-  payload.logger.info('Starting...')
+  const serverURL = payload.config.serverURL || process.env.NEXT_PUBLIC_SERVER_URL
+  if (!serverURL) {
+    throw new Error(
+      `Cannot resolve relative media URL "${url}". Configure serverURL in Payload or NEXT_PUBLIC_SERVER_URL.`,
+    )
+  }
 
-  for (const collection of mediaCollections) {
-    payload.logger.info(`Going over collection: ${collection}`)
+  return new URL(url, serverURL).toString()
+}
 
-    const media = await payload.find({
-      collection,
+const fetchBuffer = async (url: string): Promise<Buffer> => {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= fetchAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+      if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`)
+      return Buffer.from(await response.arrayBuffer())
+    } catch (error) {
+      lastError = error
+      if (attempt < fetchAttempts) await sleep(250 * 2 ** (attempt - 1))
+    }
+  }
+
+  throw lastError
+}
+
+const backfillCollection = async (payload: Payload, collection: string): Promise<void> => {
+  let page = 1
+  let processed = 0
+  let skipped = 0
+  let failed = 0
+  let totalPages = 1
+
+  payload.logger.info(`[image-placeholders] Starting ${collection}`)
+
+  do {
+    // The query intentionally includes every supported image rather than only
+    // missing placeholders. Updating a placeholder therefore does not change
+    // pagination while this script is running.
+    const result = await payload.find({
+      collection: collection as never,
+      depth: 0,
+      limit: batchSize,
+      overrideAccess: true,
+      page,
+      sort: 'id',
       where: {
-        blurDataUrl: {
-          exists: false,
-        },
-        mimeType: {
-          contains: 'image/',
-        },
+        and: [
+          { mimeType: { contains: 'image/' } },
+          ...(placeholder.type === 'pixel' ? [{ mimeType: { not_equals: 'image/svg+xml' } }] : []),
+        ],
       },
-      limit: 999999999,
     })
 
-    const docs = media.docs as unknown as TypedUploadCollection['media'][]
+    totalPages = result.totalPages
 
-    for (const mediaItem of docs) {
-      payload.logger.info(`Processing media item: ${mediaItem.id}`)
-      const response = await fetch(`${process.env.PAYLOAD_PUBLIC_SERVER_URL}/${mediaItem.url}`)
-
-      if (response.status !== 200) {
-        payload.logger.error(`Error fetching ${mediaItem.url}: ${response.statusText}`)
-        continue
+    await mapWithConcurrency(result.docs as Record<string, unknown>[], concurrency, async (doc) => {
+      const id = doc.id
+      const existing = doc[fieldName]
+      if (!overwriteExisting && typeof existing === 'string' && existing.length > 0) {
+        skipped += 1
+        return
       }
 
-      const blurDataURL = await generateDataUrl(await response.arrayBuffer())
+      try {
+        if (typeof doc.url !== 'string' || !doc.url) throw new Error('Document has no media URL.')
+        const sourceURL = resolveSourceURL(doc.url, payload)
+        const dataURL = await generatePlaceholderDataUrl(await fetchBuffer(sourceURL), placeholder)
 
-      await payload.update({
-        collection,
-        id: mediaItem.id,
-        data: {
-          blurDataUrl: blurDataURL,
-        },
-      })
-    }
+        await payload.update({
+          collection: collection as never,
+          data: { [fieldName]: dataURL } as never,
+          id: id as never,
+          overrideAccess: true,
+        })
+        processed += 1
+      } catch (error) {
+        failed += 1
+        payload.logger.warn(
+          `[image-placeholders] Failed ${collection}/${String(id)}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+      }
+    })
+
+    payload.logger.info(
+      `[image-placeholders] ${collection} page ${page}/${totalPages} (generated=${processed}, skipped=${skipped}, failed=${failed})`,
+    )
+    page += 1
+  } while (page <= totalPages)
+
+  payload.logger.info(
+    `[image-placeholders] Finished ${collection} (generated=${processed}, skipped=${skipped}, failed=${failed})`,
+  )
+}
+
+const run = async (): Promise<void> => {
+  const config = await import('../payload.config').then((module) => module.default)
+  const payload = await getPayload({ config })
+
+  for (const collection of collections) {
+    await backfillCollection(payload, collection)
   }
 }
 
-await migrateBlurDataUrls()
-process.exit(0)
+try {
+  await run()
+} catch (error) {
+  console.error(error)
+  process.exitCode = 1
+}

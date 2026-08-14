@@ -1,43 +1,45 @@
 import sharp from 'sharp'
-import { File } from './getIncomingFiles'
-import { BlurDataUrlsPluginOptions } from '../types'
 
-export const generateDataUrl = async (
-  file: File,
-  options?: BlurDataUrlsPluginOptions['blurOptions'],
+import { resolvePlaceholderOptions } from '../options'
+import type { PlaceholderInput, PlaceholderOptions, ResolvedPlaceholderOptions } from '../types'
+
+const normalizeInput = (input: PlaceholderInput): Buffer | string =>
+  typeof input === 'string' || Buffer.isBuffer(input) ? input : Buffer.from(input)
+
+export const generatePlaceholderDataUrl = async (
+  input: PlaceholderInput,
+  options?: PlaceholderOptions,
+): Promise<string> => generateResolvedPlaceholderDataUrl(input, resolvePlaceholderOptions(options))
+
+export const generateResolvedPlaceholderDataUrl = async (
+  input: PlaceholderInput,
+  options: ResolvedPlaceholderOptions,
 ): Promise<string> => {
-  const { buffer } = file
+  const image = sharp(normalizeInput(input)).autoOrient()
 
-  const width = options?.width ?? 32
-  const height: number | 'auto' = options?.height ?? 'auto'
-  const blur = options?.blur ?? 18
-
-  try {
-    const sharpImage = sharp(buffer)
-
-    const metadata = await sharpImage.metadata()
-
-    let resizedHeight: number
-
-    if (height === 'auto' && metadata.width && metadata.height) {
-      resizedHeight = Math.round((width / metadata.width) * metadata.height)
-    } else if (typeof height === 'number') {
-      resizedHeight = height
-    } else {
-      resizedHeight = 32
-    }
-
-    const blurDataBuffer = await sharpImage
-      .resize(width, resizedHeight, { fit: 'fill' })
-      .blur(blur)
-      .png()
+  if (options.type === 'pixel') {
+    const output = await image
+      .resize({
+        fit: 'inside',
+        height: options.maxDimension,
+        kernel: sharp.kernel.nearest,
+        width: options.width,
+      })
+      .webp({ quality: options.quality })
       .toBuffer()
 
-    const blurDataURL = `data:image/png;base64,${blurDataBuffer.toString('base64')}`
-
-    return blurDataURL
-  } catch (error) {
-    console.error('Error generating blurDataURL:', error)
-    throw error
+    return `data:image/webp;base64,${output.toString('base64')}`
   }
+
+  const resized =
+    options.height === 'auto'
+      ? image.resize({
+          fit: 'inside',
+          height: options.maxDimension,
+          width: options.width,
+        })
+      : image.resize(options.width, options.height, { fit: 'fill' })
+
+  const output = await resized.blur(options.blur).png().toBuffer()
+  return `data:image/png;base64,${output.toString('base64')}`
 }

@@ -1,37 +1,59 @@
-import type { CollectionConfig, CollectionBeforeChangeHook } from 'payload'
-import { createBeforeChangeHook } from './hooks/beforeChange'
-import { BlurDataUrlsPluginOptions } from './types'
+import type { CollectionConfig, TextField } from 'payload'
+
+import { createBeforeChangeHook, isBlurDataUrlsHook } from './hooks/beforeChange'
+import type { ResolvedPluginOptions } from './types'
+
+const createPlaceholderField = (options: ResolvedPluginOptions): TextField => ({
+  name: options.fieldName,
+  type: 'text',
+  admin: {
+    description:
+      options.placeholder.type === 'pixel'
+        ? 'Auto-generated pixelated image placeholder. Regenerated whenever the file changes.'
+        : 'Auto-generated blurred image placeholder. Regenerated whenever the file changes.',
+    hidden: true,
+    readOnly: true,
+  },
+})
 
 const extendCollectionConfig = (
   collection: CollectionConfig,
-  hook: CollectionBeforeChangeHook,
+  options: ResolvedPluginOptions,
 ): CollectionConfig => {
-  const hasField = collection.fields.some(
-    (field) => 'name' in field && field.name === 'blurDataUrl',
+  if (!collection.upload) {
+    throw new Error(`[blur-data-urls] Collection "${collection.slug}" must be upload-enabled.`)
+  }
+
+  const existingField = collection.fields.find(
+    (field) => 'name' in field && field.name === options.fieldName,
   )
+  if (existingField && (existingField.type !== 'text' || existingField.hasMany)) {
+    throw new Error(
+      `[blur-data-urls] Existing field "${options.fieldName}" in collection "${collection.slug}" must be a single-value text field.`,
+    )
+  }
+
+  const hooks = collection.hooks?.beforeChange ?? []
+  const beforeChange = hooks.some((hook) => isBlurDataUrlsHook(hook, options.fieldName))
+    ? hooks
+    : [...hooks, createBeforeChangeHook(options)]
+
   return {
     ...collection,
-    fields: hasField
+    fields: existingField
       ? collection.fields
-      : [
-          ...collection.fields,
-          {
-            name: 'blurDataUrl',
-            type: 'text',
-            admin: { readOnly: true },
-          },
-        ],
+      : [...collection.fields, createPlaceholderField(options)],
     hooks: {
       ...collection.hooks,
-      beforeChange: [...(collection.hooks?.beforeChange ?? []), hook],
+      beforeChange,
     },
   }
 }
 
 export const extendCollectionsConfig = (
   incomingCollections: CollectionConfig[],
-  options: BlurDataUrlsPluginOptions,
-) => {
+  options: ResolvedPluginOptions,
+): CollectionConfig[] => {
   const requested = new Set(options.collections.map(({ slug }) => slug))
   const available = new Set(incomingCollections.map(({ slug }) => slug))
   const missing = [...requested].filter((slug) => !available.has(slug))
@@ -39,11 +61,7 @@ export const extendCollectionsConfig = (
     throw new Error(`[blur-data-urls] Collections not found: ${missing.join(', ')}`)
   }
 
-  return incomingCollections.map((collection) => {
-    const foundInConfig = requested.has(collection.slug)
-
-    if (!foundInConfig) return collection
-
-    return extendCollectionConfig(collection, createBeforeChangeHook(options.blurOptions))
-  })
+  return incomingCollections.map((collection) =>
+    requested.has(collection.slug) ? extendCollectionConfig(collection, options) : collection,
+  )
 }

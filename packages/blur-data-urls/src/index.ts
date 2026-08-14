@@ -1,2 +1,10 @@
 export { blurDataUrlsPlugin } from './plugin'
-export type { BlurDataUrlsPluginOptions } from './types'
+export { generatePlaceholderDataUrl } from './utilities/generateDataUrl'
+export type {
+  BlurDataUrlsPluginOptions,
+  BlurPlaceholderOptions,
+  PixelPlaceholderOptions,
+  PlaceholderInput,
+  PlaceholderOptions,
+  PluginCollectionConfig,
+} from './types'
