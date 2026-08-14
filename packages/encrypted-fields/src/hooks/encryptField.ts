@@ -1,6 +1,4 @@
-import { encrypt } from '../utils/encrypt'
+import { encryptValue } from '../utils/values'
 
-export const encryptField = (value: unknown, secret: string) => {
-  if (value === undefined || value === null) return undefined
-  return encrypt(JSON.stringify(value), secret)
-}
+export const encryptField = (value: unknown, secret: string, context = '') =>
+  encryptValue(value, secret, context)

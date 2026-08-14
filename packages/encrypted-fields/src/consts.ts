@@ -1,3 +1,6 @@
 export const authenticatedAlgorithm = 'aes-256-gcm'
 export const legacyAlgorithm = 'aes-256-ctr'
-export const encryptedValuePrefix = 'v2'
+export const legacyAuthenticatedValuePrefix = 'v2'
+export const encryptedValuePrefix = 'v3'
+export const keyDerivationDigest = 'sha256'
+export const keyDerivationInfo = '@oversightstudio/encrypted-fields:v3'

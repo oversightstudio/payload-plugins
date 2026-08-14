@@ -1,10 +1,4 @@
-import { decrypt } from '../utils/decrypt'
+import { decryptValue } from '../utils/values'
 
-export const decryptField = (value: unknown, secret: string): unknown => {
-  if (value === undefined || value === null || typeof value !== 'string') return undefined
-  try {
-    return JSON.parse(decrypt(value, secret))
-  } catch {
-    return undefined
-  }
-}
+export const decryptField = (value: unknown, secrets: string[], context = ''): unknown =>
+  decryptValue(value, secrets, context)?.value

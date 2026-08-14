@@ -2,7 +2,7 @@
   "name": "@oversightstudio/encrypted-fields",
   "type": "module",
   "version": "1.0.0",
-  "description": "Database field encryption for Payload.",
+  "description": "Authenticated, versioned database field encryption for Payload.",
   "private": false,
   "bugs": "https://github.com/oversightstudio/payload-plugins/issues",
   "repository": "https://github.com/oversightstudio/payload-plugins/tree/main/packages/encrypted-fields",
@@ -33,6 +33,7 @@
     }
   },
   "devDependencies": {
+    "@payloadcms/db-sqlite": "3.88.0",
     "@payloadcms/ui": "3.88.0",
     "payload": "3.88.0",
     "tsup": "8.5.1",
