@@ -1,5 +1,5 @@
 import type { Config, Plugin } from 'payload'
-import { CONTENT_GUARD_RUNTIME_KEY } from './constants'
+import { CONTENT_GUARD_RUNTIME_KEY, CONTENT_GUARD_TOKEN_TTL_MS } from './constants'
 import { createContentGuardGlobal } from './global'
 import type { ContentGuardPluginOptions, ResolvedContentGuardOptions } from './types'
 
@@ -33,6 +33,10 @@ export const contentGuardPlugin =
     if (rateLimit && (rateLimit.maxAttempts < 1 || rateLimit.windowMs < 1_000)) {
       throw new Error('[content-guard] rateLimit requires maxAttempts >= 1 and windowMs >= 1000.')
     }
+    const tokenExpiration = pluginOptions.tokenExpiration ?? CONTENT_GUARD_TOKEN_TTL_MS / 1_000
+    if (!Number.isSafeInteger(tokenExpiration) || tokenExpiration < 1) {
+      throw new Error('[content-guard] tokenExpiration must be a positive integer in seconds.')
+    }
 
     const resolved: ResolvedContentGuardOptions = {
       adminBypass: pluginOptions.adminBypass ?? true,
@@ -43,6 +47,7 @@ export const contentGuardPlugin =
       noIndex: pluginOptions.noIndex ?? true,
       rateLimit,
       signingSecret,
+      tokenExpiration,
     }
 
     return {

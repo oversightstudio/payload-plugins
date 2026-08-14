@@ -50,3 +50,32 @@ test('extending a collection preserves its original order', () => {
     ['before', 'videos', 'after'],
   )
 })
+
+test('collectionAccess adds Payload-native CRUD rules without changing legacy endpoint access', () => {
+  const create = () => true
+  const read = () => false
+  const legacyAccess = async () => true
+  const result = apply(
+    {
+      ...options(),
+      access: legacyAccess,
+      collectionAccess: { create, read },
+    },
+    config({ collections: [], secret: 'payload-secret' }),
+  )
+  const collection = result.collections?.find(({ slug }) => slug === 'mux-video')
+
+  assert.equal(collection?.access?.create, create)
+  assert.equal(collection?.access?.read, read)
+})
+
+test('legacy access remains the generated collection read rule when no override is provided', async () => {
+  const legacyAccess = async () => false
+  const result = apply(
+    { ...options(), access: legacyAccess },
+    config({ collections: [], secret: 'payload-secret' }),
+  )
+  const collection = result.collections?.find(({ slug }) => slug === 'mux-video')
+
+  assert.equal(await collection?.access?.read?.({ req: { user: { id: 'user' } } } as never), false)
+})

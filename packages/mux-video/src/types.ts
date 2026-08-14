@@ -1,5 +1,10 @@
 import { AssetOptions } from '@mux/mux-node/resources/video/assets.mjs'
-import type { TypedCollection, PayloadRequest } from 'payload'
+import type { CollectionConfig, PayloadRequest, TypedCollection } from 'payload'
+
+export type MuxVideoCollectionAccess = Pick<
+  NonNullable<CollectionConfig['access']>,
+  'create' | 'delete' | 'read' | 'update'
+>
 
 /**
  * Initialization settings for the Mux implementation.
@@ -134,10 +139,17 @@ export type MuxVideoPluginOptions = {
   reconcileOnInit?: false | 'createMissing' | 'deleteStale' | 'createMissingAndDeleteStale'
 
   /**
-   * An optional function to determine whether the current request is allowed to upload files.
-   * Should return a boolean or a Promise resolving to a boolean.
+   * A backwards-compatible access function used by the plugin's custom API endpoints
+   * and as the generated collection's default read access.
    */
   access?: (request: PayloadRequest) => Promise<boolean> | boolean
+
+  /**
+   * Payload-native CRUD access overrides for the generated Mux video collection.
+   * Unspecified operations retain Payload's current defaults. A custom `read`
+   * replaces the legacy `access` function for collection reads only.
+   */
+  collectionAccess?: MuxVideoCollectionAccess
 
   /**
    * Options for generating signed URLs for video playback.

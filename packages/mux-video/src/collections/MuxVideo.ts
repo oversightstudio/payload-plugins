@@ -13,7 +13,10 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
     plural: 'Videos',
   },
   access: {
-    read: ({ req }) => pluginOptions.access?.(req) ?? defaultAccessFunction(req),
+    ...pluginOptions.collectionAccess,
+    read:
+      pluginOptions.collectionAccess?.read ??
+      (({ req }) => pluginOptions.access?.(req) ?? defaultAccessFunction(req)),
   },
   admin: {
     useAsTitle: 'title',
@@ -209,10 +212,6 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
 
                 const url = new URL(`https://image.mux.com/${playbackId}/thumbnail.${extension}`)
 
-                if (typeof posterTimestamp === 'number') {
-                  url.searchParams.set('time', posterTimestamp.toString())
-                }
-
                 if (siblingData.playbackPolicy === 'signed') {
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
@@ -224,6 +223,8 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
                   })
 
                   url.searchParams.set('token', token)
+                } else if (typeof posterTimestamp === 'number') {
+                  url.searchParams.set('time', posterTimestamp.toString())
                 }
 
                 return url.toString()
@@ -253,21 +254,19 @@ export const MuxVideo = (mux: Mux, pluginOptions: MuxVideoPluginOptions): Collec
 
                 const url = new URL(`https://image.mux.com/${playbackId}/animated.${extension}`)
 
-                if (typeof posterTimestamp === 'number') {
-                  url.searchParams.set('time', posterTimestamp.toString())
-                }
-
                 if (siblingData.playbackPolicy === 'signed') {
                   const token = await mux.jwt.signPlaybackId(playbackId, {
                     expiration: pluginOptions.signedUrlOptions?.expiration ?? '1d',
                     type: 'gif',
                     params:
                       typeof posterTimestamp === 'number'
-                        ? { time: posterTimestamp.toString() }
+                        ? { start: posterTimestamp.toString() }
                         : undefined,
                   })
 
                   url.searchParams.set('token', token)
+                } else if (typeof posterTimestamp === 'number') {
+                  url.searchParams.set('start', posterTimestamp.toString())
                 }
 
                 return url.toString()

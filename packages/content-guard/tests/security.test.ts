@@ -12,7 +12,9 @@ test('tokens are signed, expire, and reject future issuance', () => {
   assert.equal(verifyAccessToken(token, 'review-me', secret, now), true)
   assert.equal(verifyAccessToken(token, 'changed', secret, now), false)
   assert.equal(verifyAccessToken(token, 'review-me', 'another-secret', now), false)
-  assert.equal(verifyAccessToken(token, 'review-me', secret, now + 86_400_001), false)
+  assert.equal(verifyAccessToken(token, 'review-me', secret, now + 7 * 86_400_000), true)
+  assert.equal(verifyAccessToken(token, 'review-me', secret, now + 7 * 86_400_000 + 1), false)
+  assert.equal(verifyAccessToken(token, 'review-me', secret, now + 3_601_000, 3_600_000), false)
   assert.equal(
     verifyAccessToken(
       createAccessToken('review-me', secret, now + 31_000),

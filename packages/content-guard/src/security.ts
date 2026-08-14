@@ -29,6 +29,7 @@ export function verifyAccessToken(
   password: string,
   secret: string,
   now = Date.now(),
+  ttlMs = CONTENT_GUARD_TOKEN_TTL_MS,
 ): boolean {
   const parts = token.split('.')
   if (parts.length !== 3) return false
@@ -38,11 +39,7 @@ export function verifyAccessToken(
 
   const issuedAt = Number(rawTimestamp)
   const age = now - issuedAt
-  if (
-    !Number.isSafeInteger(issuedAt) ||
-    age < -MAX_CLOCK_SKEW_MS ||
-    age > CONTENT_GUARD_TOKEN_TTL_MS
-  ) {
+  if (!Number.isSafeInteger(issuedAt) || age < -MAX_CLOCK_SKEW_MS || age > ttlMs) {
     return false
   }
 

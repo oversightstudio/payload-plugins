@@ -33,6 +33,8 @@ export type ContentGuardPluginOptions = {
   adminBypass?: boolean | ContentGuardBypass
   /** Uses Payload's configured secret by default. */
   signingSecret?: string
+  /** Access-token and cookie lifetime in seconds. @default 604800 (7 days) */
+  tokenExpiration?: number
   /** Additional exact browser origins allowed to submit passwords. */
   allowedOrigins?: string[]
   /** Set false to disable the built-in bounded in-memory limiter. */
@@ -49,6 +51,7 @@ export type ResolvedContentGuardOptions = {
     | (Required<Pick<ContentGuardRateLimitOptions, 'maxAttempts' | 'windowMs'>> &
         Pick<ContentGuardRateLimitOptions, 'getClientIdentifier'>)
   signingSecret: string
+  tokenExpiration: number
 }
 
 export type ContentGuardSettings = {

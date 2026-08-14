@@ -46,7 +46,8 @@ For signed playback, also provide `jwtSigningKey` and `jwtPrivateKey`, then use 
 | `initSettings`         | `MuxVideoInitSettings`       | Required               | Mux API, webhook, and optional signing credentials.            |
 | `uploadSettings`       | `MuxVideoUploadSettings`     | Required               | Direct upload settings, including an exact CORS origin.        |
 | `extendCollection`     | `string`                     | —                      | Extend an existing collection instead of creating `mux-video`. |
-| `access`               | `function`                   | Authenticated users    | Decide who can upload.                                         |
+| `access`               | `function`                   | Payload admins         | Protect plugin endpoints and default collection reads.         |
+| `collectionAccess`     | Payload CRUD access          | Payload defaults       | Override collection `create`, `read`, `update`, or `delete`.   |
 | `signedUrlOptions`     | `object`                     | `{ expiration: '1d' }` | Configure signed playback URLs.                                |
 | `posterExtension`      | `'webp' \| 'jpg' \| 'png'`   | `'png'`                | Poster format.                                                 |
 | `animatedGifExtension` | `'gif' \| 'webp'`            | `'gif'`                | Animated preview format.                                       |
@@ -62,6 +63,22 @@ Relate other documents to the generated `mux-video` collection, then pass its pl
 import MuxPlayer from '@mux/mux-player-react'
 
 ;<MuxPlayer playbackId={video.playbackOptions?.[0]?.playbackId} />
+```
+
+## Collection Access
+
+Use `collectionAccess` when the generated collection needs project-specific CRUD rules. It accepts Payload access functions and leaves unspecified operations on Payload's existing defaults:
+
+```tsx
+muxVideoPlugin({
+  // ...credentials and upload settings
+  collectionAccess: {
+    create: ({ req }) => Boolean(req.user),
+    read: ({ req }) => Boolean(req.user),
+    update: ({ req }) => Boolean(req.user),
+    delete: ({ req }) => req.user?.role === 'admin',
+  },
+})
 ```
 
 Deleting a Payload video also deletes its Mux asset. Webhook payloads are signature-verified and size-limited; keep the signing secret private and restrict write access appropriately.

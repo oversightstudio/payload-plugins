@@ -15,9 +15,9 @@ const json = (body: unknown, status: number, headers?: HeadersInit) =>
     headers: { 'Cache-Control': 'no-store', ...headers },
   })
 
-const cookieHeader = (token: string) => {
+const cookieHeader = (token: string, maxAge: number) => {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  return `${CONTENT_GUARD_COOKIE}=${token}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${secure}`
+  return `${CONTENT_GUARD_COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`
 }
 
 async function parsePassword(req: PayloadRequest): Promise<null | string> {
@@ -124,7 +124,9 @@ export function createContentGuardGlobal({
 
           limiter?.clear(identifier)
           const token = createAccessToken(password, options.signingSecret)
-          return json({ unlocked: true }, 200, { 'Set-Cookie': cookieHeader(token) })
+          return json({ unlocked: true }, 200, {
+            'Set-Cookie': cookieHeader(token, options.tokenExpiration),
+          })
         },
       },
     ],

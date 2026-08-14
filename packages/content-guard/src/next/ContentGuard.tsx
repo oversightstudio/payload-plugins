@@ -45,7 +45,14 @@ export async function ContentGuard({ children, passwordGate, payloadConfig }: Co
 
   const token = cookieStore.get(CONTENT_GUARD_COOKIE)?.value
   const unlocked = Boolean(
-    token && verifyAccessToken(token, guard.password as string, options.signingSecret),
+    token &&
+    verifyAccessToken(
+      token,
+      guard.password as string,
+      options.signingSecret,
+      Date.now(),
+      options.tokenExpiration * 1_000,
+    ),
   )
   if (bypassed || unlocked)
     return (
