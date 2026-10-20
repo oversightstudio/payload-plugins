@@ -31,14 +31,14 @@
     }
   },
   "devDependencies": {
-    "@payloadcms/ui": "^3.43.0",
-    "payload": "^3.43.0",
+    "@payloadcms/ui": "3.91.0",
+    "payload": "3.91.0",
     "tsup": "^8.3.6",
     "typescript": "5.8.3"
   },
   "peerDependencies": {
-    "@payloadcms/ui": "^3.43.0",
-    "payload": "^3.43.0"
+    "@payloadcms/ui": "^3.90.0",
+    "payload": "^3.90.0"
   },
   "publishConfig": {
     "exports": {

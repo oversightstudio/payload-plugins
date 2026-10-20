@@ -31,13 +31,13 @@
     }
   },
   "devDependencies": {
-    "payload": "^3.43.0",
-    "sharp": "0.34.2",
+    "payload": "3.91.0",
+    "sharp": "0.35.5",
     "tsup": "^8.3.6",
     "typescript": "5.8.3"
   },
   "peerDependencies": {
-    "payload": "^3.43.0",
+    "payload": "^3.90.0",
     "sharp": "^0.34.2"
   },
   "publishConfig": {
